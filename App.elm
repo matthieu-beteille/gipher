@@ -10,6 +10,8 @@ import ElmFire
 import Graphics.Element exposing (..)
 import Json.Decode exposing (..)
 import Gif
+import Html.Attributes exposing (style)
+
  -- Model
 
 type alias User =
@@ -87,7 +89,47 @@ view: Signal.Address Action -> Model -> Html
 view address model =
   let body = case model.user of
     Just user -> Gif.view (Signal.forwardTo address NewGif) model.gif
-    Nothing -> button [onClick address (Login Nothing)] [text "Login"]
+    Nothing -> loginView address model
   in
-    div []
+    div [containerStyle]
       (body :: [])
+
+loginView: Signal.Address Action -> Model -> Html
+loginView address model =
+  div []
+  [h1 [titleStyle] [text "Gipher"]
+  , div [btnStyle] [a [onClick address (Login Nothing)] [text "Login with Facebook"]]]
+
+containerStyle: Attribute
+containerStyle =
+  style [
+    ("font-family", "Source Sans Pro")
+  , ("background-color", "#3b5998")
+  , ("height", "100%")
+  , ("display", "flex")
+  , ("justify-content", "center")
+  , ("align-items", "center")
+  ]
+
+titleStyle: Attribute
+titleStyle =
+  style [
+    ("color", "white")
+  , ("text-align", "center")
+  , ("margin-bottom", "50px")
+  , ("font-size", "2.5em")
+  ]
+
+btnStyle : Attribute
+btnStyle =
+  style
+    [ ("font-size", "20px")
+    , ("color", "white")
+    , ("cursor", "pointer")
+    , ("display", "inline-block")
+    , ("width", "100px")
+    , ("text-align", "center")
+    , ("border", "1px solid white")
+    , ("border-radius", "3px")
+    , ("padding", "10px")
+    ]

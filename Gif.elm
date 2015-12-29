@@ -7,13 +7,17 @@ import Effects exposing (..)
 import Task exposing (..)
 import Html.Events exposing (onClick)
 
+type alias Gif = { url: String
+                 , width: Int
+                 , height: Int }
 
 type alias Model = Maybe (String)
 
 init: (Model, Effects Action)
 init = (Nothing, fetchNewGif)
 
-type Action = Fetch | NewGif (Maybe String)
+type Action = Fetch
+  | NewGif (Maybe String)
 
 fetchNewGif: Effects Action
 fetchNewGif =
@@ -40,5 +44,7 @@ update action model =
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  div [] [div [] [text (Maybe.withDefault "" model)]
-  , button [onClick address Fetch] [text "NewGif"]]
+  let url = Maybe.withDefault "" model
+  in
+    div [] [div [] [text url]
+    , button [onClick address Fetch] [text "NewGif"]]
