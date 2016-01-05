@@ -1,6 +1,7 @@
 module App (Model, init, Action, update, view) where
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import ElmFire exposing (..)
 import ElmFire.Auth exposing (..)
@@ -92,13 +93,22 @@ view address model =
     Nothing -> loginView address model
   in
     div [containerStyle]
-      (body :: [])
+      (font :: css "gipher.css" :: body :: [])
 
 loginView: Signal.Address Action -> Model -> Html
 loginView address model =
   div []
   [h1 [titleStyle] [text "Gipher"]
   , div [btnStyle] [a [onClick address (Login Nothing)] [text "Login with Facebook"]]]
+
+
+css: String -> Html
+css path =
+  node "link" [ rel "stylesheet", href path ] []
+
+font: Html
+font =
+  node "link" [ href "https://fonts.googleapis.com/css?family=Source+Sans+Pro", rel "stylesheet" ] []
 
 containerStyle: Attribute
 containerStyle =

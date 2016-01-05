@@ -1,3 +1,7 @@
 body {
   margin: 0px;
 }
+
+body > div {
+  height: 100%;
+}
