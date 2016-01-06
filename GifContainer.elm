@@ -8,18 +8,16 @@ import Effects exposing (..)
 import Task exposing (..)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp)
 import Debug
+import Gif
 
-type alias Gif = { url: String
-                  , width: String
-                  , height: String }
-
-type alias Model = List Gif
+type alias Model = List Gif.Model
 
 init: (Model, Effects Action)
 init = ([], fetchNewGifs)
 
 type Action = Fetch
   | NewGifs (Maybe Model)
+  | GifAction Gif.Action
 
 fetchNewGifs: Effects Action
 fetchNewGifs =
@@ -33,17 +31,10 @@ getUrl =
   Http.url "http://api.giphy.com/v1/gifs/trending"
     [ ("api_key", "dc6zaTOxFJmzC") ]
 
-decodeGif: Json.Decoder Gif
-decodeGif =
-  Json.object3 Gif
-    (Json.at ["images", "fixed_width", "url"] Json.string)
-    (Json.at ["images", "fixed_width", "width"] Json.string)
-    (Json.at ["images", "fixed_width", "height"] Json.string)
-
 decodeList: Json.Decoder Model
 decodeList =
   Json.object1 identity
-    ("data" := Json.list decodeGif)
+    ("data" := Json.list Gif.decodeModel)
 
 update: Action -> Model -> (Model, Effects Action)
 update action model =
@@ -57,12 +48,11 @@ update action model =
 
         Nothing -> (fst init, Effects.none)
 
+    GifAction gifAction -> (model, Effects.none)
+
 view: Signal.Address Action -> Model -> Html
 view address model =
-  div [flexContainerStyle] (List.map gifView (List.take 1 model))
-
-gifView gif =
-  img (getGifAttributes gif) []
+  div [flexContainerStyle] (List.map (Gif.view (Signal.forwardTo address GifAction)) (List.take 1 model))
 
 flexContainerStyle: Attribute
 flexContainerStyle =
@@ -71,14 +61,6 @@ flexContainerStyle =
         , ("align-content", "center")
         , ("justify-content", "center")
         , ("align-items", "center") ]
-
-getGifAttributes: Gif -> List (Attribute)
-getGifAttributes model =
-  [ src model.url
-  -- , onMouseDown Debug.log "loool"
-  , style [ ("width", model.width)
-          , ("height", model.height)
-          ]]
 
 btnAttributes: Signal.Address Action -> List (Attribute)
 btnAttributes address =
