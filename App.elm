@@ -10,7 +10,7 @@ import Task
 import ElmFire
 import Graphics.Element exposing (..)
 import Json.Decode exposing (..)
-import Gif
+import GifContainer
 import Html.Attributes exposing (style)
 
  -- Model
@@ -24,23 +24,23 @@ type alias User =
 type alias Model =
   { root: ElmFire.Location
   , user: Maybe ( User )
-  , gif: Gif.Model
+  , gif: GifContainer.Model
   }
 
 init: String -> (Model, Effects Action)
 init init =
-  let (gifModel, gifEffect) = Gif.init
+  let (gifModel, gifEffect) = GifContainer.init
   in
     ({ root = ElmFire.fromUrl init
      , user = Nothing
      , gif = gifModel
-     }, (Effects.map NewGif gifEffect))
+     }, (Effects.map NewGifs gifEffect))
 
   -- Actions
 
 type Action = Login (Maybe Authentication)
   | Logout
-  | NewGif Gif.Action
+  | NewGifs GifContainer.Action
 
   -- Update
 
@@ -58,7 +58,6 @@ decodeDisplayName =
 getUserFromAuth: Authentication -> User
 getUserFromAuth auth =
   User auth.uid auth.token (Result.withDefault "" (decodeValue decodeDisplayName auth.specifics))
-
 
 update: Action -> Model -> (Model, Effects Action)
 update action model =
@@ -79,17 +78,17 @@ update action model =
       ( model
       , Effects.none )
 
-    NewGif gifAction ->
-      let (model1, effects) = Gif.update gifAction model.gif
+    NewGifs gifAction ->
+      let (model1, effects) = GifContainer.update gifAction model.gif
       in
-        ({model | gif = model1}, (Effects.map NewGif effects))
+        ({model | gif = model1}, (Effects.map NewGifs effects))
 
   -- View
 
 view: Signal.Address Action -> Model -> Html
 view address model =
   let body = case model.user of
-    Just user -> Gif.view (Signal.forwardTo address NewGif) model.gif
+    Just user -> GifContainer.view (Signal.forwardTo address NewGifs) model.gif
     Nothing -> loginView address model
   in
     div [containerStyle]
