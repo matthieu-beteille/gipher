@@ -17,7 +17,7 @@ init = ([], fetchNewGifs)
 
 type Action = Fetch
   | NewGifs (Maybe Model)
-  | GifAction Gif.Action
+  | Gif Gif.Action
 
 fetchNewGifs: Effects Action
 fetchNewGifs =
@@ -48,11 +48,20 @@ update action model =
 
         Nothing -> (fst init, Effects.none)
 
-    GifAction gifAction -> (model, Effects.none)
+    Gif gifAction ->
+      case (List.head model) of
+        Just gif ->
+          case (List.tail model) of
+            Just tail -> (((Gif.update gifAction gif) :: tail), Effects.none)
+
+            Nothing -> (model, Effects.none)
+
+        Nothing -> (model, Effects.none)
+
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  div [flexContainerStyle] (List.map (Gif.view (Signal.forwardTo address GifAction)) (List.take 1 model))
+  div [flexContainerStyle] (List.map (Gif.view (Signal.forwardTo address Gif)) (List.take 1 model))
 
 flexContainerStyle: Attribute
 flexContainerStyle =

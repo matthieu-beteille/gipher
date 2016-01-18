@@ -4,17 +4,23 @@ import Graphics.Element exposing (..)
 import Task exposing (..)
 import TaskTutorial exposing (print)
 import Effects exposing (Never)
-import App exposing (init, update, view)
-import StartApp
-
+import App exposing (..)
+import MyStartApp as StartApp
+import Gif
+import GifContainer
+import Mouse
 
 app =
   StartApp.start
     { init = init "https://gipher.firebaseio.com"
     , update = update
     , view = view
-    , inputs = []
+    , inputs = [Signal.map mousePos Mouse.position]
     }
+
+mousePos: (Int, Int) -> App.Action
+mousePos pos =
+  (App.GifContainer (GifContainer.Gif (Gif.MousePos pos)))
 
 main =
   app.html

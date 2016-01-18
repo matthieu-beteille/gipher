@@ -7,6 +7,9 @@ import Html.Attributes exposing (..)
 import Effects exposing (..)
 import Task exposing (..)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp)
+import Debug
+import Signal
+import Mouse
 
 type alias Gif = { url: String
                   , width: String
@@ -18,6 +21,7 @@ type alias Model = { animationState: AnimationModel
                     , gif: Gif }
 
 type Action = Test
+ | MousePos (Int, Int)
 
 decodeModel: Json.Decoder Model
 decodeModel =
@@ -34,16 +38,28 @@ decodeGif =
                   (Json.at ["images", "fixed_width", "height"] Json.string)
 
 update: Action -> Model -> Model
-
+update action model =
+  case action of
+    Test -> { model | animationState = (Debug.log "model" (AnimationModel (model.animationState.x + 10))) }
+    MousePos (a,b) -> { model | animationState = (AnimationModel (a)) }
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  img (getGifAttributes model.gif) []
+  let state = Debug.log "lol" model.animationState
+      -- test = Signal.map (send address) Mouse.position
+  in
+    img (getGifAttributes model address) []
 
-getGifAttributes: Gif -> List (Attribute)
-getGifAttributes gif =
-  [ src gif.url
+send: Signal.Address Action -> (Int, Int) -> Task x ()
+send address (a, b) =
+  Signal.send address Test
+
+getGifAttributes: Model -> Signal.Address Action -> List (Attribute)
+getGifAttributes model address =
+  [ src model.gif.url
+  , onClick address Test
   -- , onMouseDown Debug.log "loool"
-  , style [ ("width", gif.width)
-          , ("height", gif.height)
+  , style [ ("width", model.gif.width)
+          , ("height", model.gif.height)
+          , ("transform", "translateX(" ++ (toString model.animationState.x) ++ "px)")
           ]]

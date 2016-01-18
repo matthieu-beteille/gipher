@@ -1,4 +1,4 @@
-module App (Model, init, Action, update, view) where
+module App where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -34,13 +34,13 @@ init init =
     ({ root = ElmFire.fromUrl init
      , user = Nothing
      , gif = gifModel
-     }, (Effects.map NewGifs gifEffect))
+     }, (Effects.map GifContainer gifEffect))
 
   -- Actions
 
 type Action = Login (Maybe Authentication)
   | Logout
-  | NewGifs GifContainer.Action
+  | GifContainer GifContainer.Action
 
   -- Update
 
@@ -78,17 +78,17 @@ update action model =
       ( model
       , Effects.none )
 
-    NewGifs gifAction ->
+    GifContainer gifAction ->
       let (model1, effects) = GifContainer.update gifAction model.gif
       in
-        ({model | gif = model1}, (Effects.map NewGifs effects))
+        ({model | gif = model1}, (Effects.map GifContainer effects))
 
   -- View
 
 view: Signal.Address Action -> Model -> Html
 view address model =
   let body = case model.user of
-    Just user -> GifContainer.view (Signal.forwardTo address NewGifs) model.gif
+    Just user -> GifContainer.view (Signal.forwardTo address GifContainer) model.gif
     Nothing -> loginView address model
   in
     div [containerStyle]
