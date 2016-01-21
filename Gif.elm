@@ -13,17 +13,22 @@ import Mouse
 import String
 import Result
 import Maybe
-import Easing exposing (ease, easeOutBounce, float)
+import Basics
+import Easing exposing (..)
+import Time exposing (Time, millisecond)
 
 type alias Gif = { url: String
                   , width: String
                   , height: String }
 
 type alias AnimationModel = { isClicked: Bool
+                            , elapsedTime: Time
+                            , prevClockTime: Time
                             , x: Int
                             , y: Int
                             , dx: Int
-                            , dy: Int}
+                            , dy: Int }
+
 
 type alias Model = { animationState: AnimationModel
                     , gif: Gif }
@@ -31,6 +36,9 @@ type alias Model = { animationState: AnimationModel
 type Action = MousePos (Int, Int)
   | DragStart (Int, Int)
   | DragEnd
+  | Tick Time
+
+duration = 600 * millisecond
 
 decodeModel: Json.Decoder Model
 decodeModel =
@@ -38,7 +46,9 @@ decodeModel =
 
 decodeAnimationModel: Json.Decoder AnimationModel
 decodeAnimationModel =
-  Json.object5 AnimationModel (Json.succeed False)
+  Json.object7 AnimationModel (Json.succeed False)
+                              (Json.succeed (0 * millisecond))
+                              (Json.succeed (0 * millisecond))
                               (Json.succeed 0)
                               (Json.succeed 0)
                               (Json.succeed 0)
@@ -50,36 +60,46 @@ decodeGif =
                   (Json.at ["images", "fixed_width", "width"] Json.string)
                   (Json.at ["images", "fixed_width", "height"] Json.string)
 
-update: Action -> Model -> Model
+update: Action -> Model -> (Model, Effects Action)
 update action model =
-  let { x, y, dx, dy, isClicked } = model.animationState
+  let { x, y, dx, dy, isClicked, elapsedTime, prevClockTime } = model.animationState
   in
     case action of
       MousePos (a, b) ->
         if isClicked then
-          let dx = Debug.log "dx" (a - x)
-              dy = Debug.log "dy" (b - y)
+          let dx = (a - x)
+              dy = (b - y)
           in
-            { model | animationState = (AnimationModel isClicked x y dx dy) }
+            ({ model | animationState = (AnimationModel isClicked elapsedTime prevClockTime x y dx dy) }, Effects.none)
         else
-          model
+          (model, Effects.none)
 
       DragStart (a, b) ->
-        let test = Debug.log "mousepositionx" x
-            test2 = Debug.log "pagex" a
-            test3 = Debug.log "mousepositiony" y
-            ewq = Debug.log "pagey" b
-        in
-          { model | animationState = (AnimationModel True a b dx dy) }
+          ({ model | animationState = (AnimationModel True 0 0 a b dx dy) }, Effects.none)
 
       DragEnd ->
-        { model | animationState = (AnimationModel False x y dx dy) }
+        ({ model | animationState = (AnimationModel False elapsedTime prevClockTime x y dx dy) }, Effects.tick Tick)
 
+      Tick clockTime ->
+        let newElapsedTime = if prevClockTime == 0 then
+              0
+            else
+              elapsedTime + (clockTime - prevClockTime)
+            oldAnimationState = model.animationState
+            newAnimationState = if newElapsedTime > duration then
+              { oldAnimationState | elapsedTime = 0, prevClockTime = 0, dx = 0, dy = 0 }
+            else
+              { oldAnimationState | elapsedTime = newElapsedTime, prevClockTime = clockTime }
+            effects = if newElapsedTime > duration then
+              Effects.none
+            else
+              Effects.tick Tick
+        in
+          ({ model | animationState = newAnimationState }, effects)
 
--- toOffset : AnimationState -> Float
--- toOffset animationState =
---   ease easeOutBounce float 0 200 second elapsedTime
-
+test : Time -> Float -> Float -> Float
+test currentTime start end =
+  ease easeOutBounce float start end duration currentTime
 
 view: Signal.Address Action -> Model -> Html
 view address model =
@@ -102,10 +122,11 @@ getGifAttributes model address =
 getStyle: Model -> List ((String, String))
 getStyle model =
   let { width, height } = model.gif
-      { dx, dy, isClicked } = model.animationState
+      { dx, dy, isClicked, elapsedTime } = Debug.log "lol" model.animationState
       transform = if isClicked
       then translate3d (toString dx) (toString dy)
-      else translate3d "0" "0"
+      else translate3d (toString (test elapsedTime (Basics.toFloat dx) 0))
+                      (toString (test elapsedTime (Basics.toFloat dy) 0))
   in
     transform :: [ ("width", model.gif.width ++ "px")
     , ("height", model.gif.height ++ "px")

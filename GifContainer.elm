@@ -51,7 +51,10 @@ update action model =
       case (List.head model) of
         Just gif ->
           case (List.tail model) of
-            Just tail -> (((Gif.update gifAction gif) :: tail), Effects.none)
+            Just tail ->
+            let (gif, effects) = Gif.update gifAction gif
+            in
+              (gif :: tail, Effects.map Gif effects)
 
             Nothing -> (model, Effects.none)
 

@@ -92,7 +92,7 @@ view address model =
     Just user -> GifContainer.view (Signal.forwardTo address GifContainer) model.gif
     Nothing -> loginView address model
   in
-    div ((onMouseUp address (GifContainer (GifContainer.Gif Gif.DragEnd))) :: [containerStyle])
+    div  [containerStyle]
       (font :: css "gipher.css" :: body :: [])
 
 loginView: Signal.Address Action -> Model -> Html
