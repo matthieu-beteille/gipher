@@ -43,8 +43,7 @@ update action model =
 
     NewGifs maybeGifs ->
       case maybeGifs of
-        Just gifs ->
-          (gifs, Effects.none)
+        Just gifs -> (gifs, Effects.none)
 
         Nothing -> (fst init, Effects.none)
 

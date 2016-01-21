@@ -2,7 +2,7 @@ module App where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onMouseUp)
 import ElmFire exposing (..)
 import ElmFire.Auth exposing (..)
 import Effects exposing (..)
@@ -11,6 +11,7 @@ import ElmFire
 import Graphics.Element exposing (..)
 import Json.Decode exposing (..)
 import GifContainer
+import Gif
 import Html.Attributes exposing (style)
 
  -- Model
@@ -91,7 +92,7 @@ view address model =
     Just user -> GifContainer.view (Signal.forwardTo address GifContainer) model.gif
     Nothing -> loginView address model
   in
-    div [containerStyle]
+    div ((onMouseUp address (GifContainer (GifContainer.Gif Gif.DragEnd))) :: [containerStyle])
       (font :: css "gipher.css" :: body :: [])
 
 loginView: Signal.Address Action -> Model -> Html

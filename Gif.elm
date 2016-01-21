@@ -10,18 +10,27 @@ import Html.Events exposing (onClick, onMouseDown, onMouseUp)
 import Debug
 import Signal
 import Mouse
+import String
+import Result
+import Maybe
+import Easing exposing (ease, easeOutBounce, float)
 
 type alias Gif = { url: String
                   , width: String
                   , height: String }
 
-type alias AnimationModel = { x: Int }
+type alias AnimationModel = { isClicked: Bool
+                            , x: Int
+                            , y: Int
+                            , dx: Int
+                            , dy: Int}
 
 type alias Model = { animationState: AnimationModel
                     , gif: Gif }
 
-type Action = Test
- | MousePos (Int, Int)
+type Action = MousePos (Int, Int)
+  | DragStart (Int, Int)
+  | DragEnd
 
 decodeModel: Json.Decoder Model
 decodeModel =
@@ -29,7 +38,11 @@ decodeModel =
 
 decodeAnimationModel: Json.Decoder AnimationModel
 decodeAnimationModel =
-  Json.object1 AnimationModel (Json.succeed 0)
+  Json.object5 AnimationModel (Json.succeed False)
+                              (Json.succeed 0)
+                              (Json.succeed 0)
+                              (Json.succeed 0)
+                              (Json.succeed 0)
 
 decodeGif: Json.Decoder Gif
 decodeGif =
@@ -39,27 +52,63 @@ decodeGif =
 
 update: Action -> Model -> Model
 update action model =
-  case action of
-    Test -> { model | animationState = (Debug.log "model" (AnimationModel (model.animationState.x + 10))) }
-    MousePos (a,b) -> { model | animationState = (AnimationModel (a)) }
+  let { x, y, dx, dy, isClicked } = model.animationState
+  in
+    case action of
+      MousePos (a, b) ->
+        if isClicked then
+          let dx = Debug.log "dx" (a - x)
+              dy = Debug.log "dy" (b - y)
+          in
+            { model | animationState = (AnimationModel isClicked x y dx dy) }
+        else
+          model
+
+      DragStart (a, b) ->
+        let test = Debug.log "mousepositionx" x
+            test2 = Debug.log "pagex" a
+            test3 = Debug.log "mousepositiony" y
+            ewq = Debug.log "pagey" b
+        in
+          { model | animationState = (AnimationModel True a b dx dy) }
+
+      DragEnd ->
+        { model | animationState = (AnimationModel False x y dx dy) }
+
+
+-- toOffset : AnimationState -> Float
+-- toOffset animationState =
+--   ease easeOutBounce float 0 200 second elapsedTime
+
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  let state = Debug.log "lol" model.animationState
-      -- test = Signal.map (send address) Mouse.position
-  in
-    img (getGifAttributes model address) []
+  div (getGifAttributes model address) []
 
-send: Signal.Address Action -> (Int, Int) -> Task x ()
-send address (a, b) =
-  Signal.send address Test
+decoder =
+  Json.object2 (,)
+    ("pageX" := Json.int)
+    ("pageY" := Json.int)
+
+translate3d x y =
+  ("transform", "translate3d(" ++ x ++ "px, " ++ y ++ "px, 0)")
 
 getGifAttributes: Model -> Signal.Address Action -> List (Attribute)
 getGifAttributes model address =
-  [ src model.gif.url
-  , onClick address Test
-  -- , onMouseDown Debug.log "loool"
-  , style [ ("width", model.gif.width)
-          , ("height", model.gif.height)
-          , ("transform", "translateX(" ++ (toString model.animationState.x) ++ "px)")
-          ]]
+  [ Html.Events.on "mousedown" decoder (\val -> Signal.message address (DragStart val))
+  , onMouseUp address DragEnd
+  , style (getStyle model) ]
+
+getStyle: Model -> List ((String, String))
+getStyle model =
+  let { width, height } = model.gif
+      { dx, dy, isClicked } = model.animationState
+      transform = if isClicked
+      then translate3d (toString dx) (toString dy)
+      else translate3d "0" "0"
+  in
+    transform :: [ ("width", model.gif.width ++ "px")
+    , ("height", model.gif.height ++ "px")
+    , ("backgroundImage", "url(" ++ model.gif.url ++ ")")
+    , ("cursor", "pointer")
+    ]
