@@ -63,7 +63,25 @@ update action model =
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  div [flexContainerStyle] (List.map (Gif.view (Signal.forwardTo address Gif)) (List.take 1 model))
+  let currentGif = List.head model
+      tail = List.tail model
+      error = div [flexContainerStyle] [div [] [text "error"]]
+  in
+    case currentGif of
+      Just first ->
+        case tail of
+          Just tail ->
+            div []
+            [ Gif.view (Signal.forwardTo address Gif) first ,
+              div [ flexContainerStyle ]
+                -- Gif.view (Signal.forwardTo address Gif) first  ::
+                (List.map image (List.take 3 tail)) ]
+          Nothing -> error
+
+      Nothing -> error
+
+image gif =
+  img [ src gif.gif.url ] []
 
 flexContainerStyle: Attribute
 flexContainerStyle =

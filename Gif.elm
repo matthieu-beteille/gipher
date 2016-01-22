@@ -33,12 +33,18 @@ type alias AnimationModel = { isClicked: Bool
 type alias Model = { animationState: AnimationModel
                     , gif: Gif }
 
+-- actions
+
 type Action = MousePos (Int, Int)
   | DragStart (Int, Int)
   | DragEnd
   | Tick Time
 
-duration = 600 * millisecond
+-- animation duration
+
+duration = 300 * millisecond
+
+-- init models from json
 
 decodeModel: Json.Decoder Model
 decodeModel =
@@ -59,6 +65,8 @@ decodeGif =
   Json.object3 Gif (Json.at ["images", "fixed_width", "url"] Json.string)
                   (Json.at ["images", "fixed_width", "width"] Json.string)
                   (Json.at ["images", "fixed_width", "height"] Json.string)
+
+-- update
 
 update: Action -> Model -> (Model, Effects Action)
 update action model =
@@ -97,8 +105,10 @@ update action model =
         in
           ({ model | animationState = newAnimationState }, effects)
 
-test : Time -> Float -> Float -> Float
-test currentTime start end =
+
+
+animate : Time -> Float -> Float -> Float
+animate currentTime start end =
   ease easeOutBounce float start end duration currentTime
 
 view: Signal.Address Action -> Model -> Html
@@ -111,7 +121,7 @@ decoder =
     ("pageY" := Json.int)
 
 translate3d x y =
-  ("transform", "translate3d(" ++ x ++ "px, " ++ y ++ "px, 0)")
+  ("transform", "translate(" ++ x ++ "px, " ++ y ++ "px)")
 
 getGifAttributes: Model -> Signal.Address Action -> List (Attribute)
 getGifAttributes model address =
@@ -125,11 +135,12 @@ getStyle model =
       { dx, dy, isClicked, elapsedTime } = Debug.log "lol" model.animationState
       transform = if isClicked
       then translate3d (toString dx) (toString dy)
-      else translate3d (toString (test elapsedTime (Basics.toFloat dx) 0))
-                      (toString (test elapsedTime (Basics.toFloat dy) 0))
+      else translate3d (toString (animate elapsedTime (Basics.toFloat dx) 0))
+                      (toString (animate elapsedTime (Basics.toFloat dy) 0))
   in
     transform :: [ ("width", model.gif.width ++ "px")
     , ("height", model.gif.height ++ "px")
     , ("backgroundImage", "url(" ++ model.gif.url ++ ")")
     , ("cursor", "pointer")
+    , ("border-radius", "3px")
     ]
