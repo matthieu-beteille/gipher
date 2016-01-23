@@ -9,6 +9,9 @@ import Task exposing (..)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp)
 import Debug
 import Gif
+import Global
+import Result
+import String
 
 type alias Model = List Gif.Model
 
@@ -36,14 +39,28 @@ decodeList =
   Json.object1 identity
     ("data" := Json.list Gif.decodeModel)
 
-update: Action -> Model -> (Model, Effects Action)
-update action model =
+sortByHeight: Gif.Model -> Gif.Model -> Order
+sortByHeight a b =
+  let height1 = String.toInt a.gif.height
+        |> Result.toMaybe
+        |> Maybe.withDefault 0
+      height2 = String.toInt b.gif.height
+        |> Result.toMaybe
+        |> Maybe.withDefault 0
+  in
+   compare height2 height1
+
+update: Action -> Model -> Global.Model -> (Model, Effects Action)
+update action model global =
   case action of
     Fetch -> init
 
     NewGifs maybeGifs ->
       case maybeGifs of
-        Just gifs -> (gifs, Effects.none)
+        Just gifs ->
+          let sortedGifs = List.sortWith sortByHeight gifs
+          in
+            (sortedGifs, Effects.none)
 
         Nothing -> (fst init, Effects.none)
 
@@ -52,35 +69,64 @@ update action model =
         Just gif ->
           case (List.tail model) of
             Just tail ->
-            let (gif, effects) = Gif.update gifAction gif
+            let ((gif, next), effects) = Gif.update gifAction gif global
             in
-              (gif :: tail, Effects.map Gif effects)
+              if not next then
+                (gif :: tail, Effects.map Gif effects)
+              else
+                (tail, Effects.map Gif effects)
 
             Nothing -> (model, Effects.none)
 
         Nothing -> (model, Effects.none)
 
 
-view: Signal.Address Action -> Model -> Html
-view address model =
+view address model global =
   let currentGif = List.head model
       tail = List.tail model
-      error = div [flexContainerStyle] [div [] [text "error"]]
+      error = div [flexContainerStyle] [div [] [text "No more gif"]]
+      gifComponent = case currentGif of
+        Just first ->
+          case tail of
+            Just tail ->
+              div [ flexContainerStyle ]
+                ( Gif.view (Signal.forwardTo address Gif) True global 0 first ::
+                  (List.reverse (List.indexedMap (Gif.view (Signal.forwardTo address Gif) False global)
+                                                  (List.take 5 tail))) )
+            Nothing -> error
+
+        Nothing -> error
+
   in
-    case currentGif of
-      Just first ->
-        case tail of
-          Just tail ->
-            div [ flexContainerStyle ]
-              ( Gif.view (Signal.forwardTo address Gif) True first  ::
-              (List.map (Gif.view (Signal.forwardTo address Gif) False)
-                                (List.take 1 tail)) )
-          Nothing -> error
+    div [] [ gifComponent ]
+            -- , div [ buttonsContainer ]
+            --   [ i [ class "material-icons", tickStyle ] [text "done"]
+            --   , i [class "material-icons", crossStyle ] [text "clear"] ]]
 
-      Nothing -> error
+crossStyle: Attribute
+crossStyle =
+  style [ ("font-size", "50px")
+        , ("color", "#FF2300")
+        , ("cursor", "pointer")
+        , ("border", "3px solid")
+        , ("border-radius", "50%") ]
 
-image gif =
-  img [ src gif.gif.url ] []
+tickStyle: Attribute
+tickStyle =
+  style [ ("font-size", "50px")
+        , ("color", "#00FF95")
+        , ("cursor", "pointer")
+        , ("border", "3px solid")
+        , ("border-radius", "50%") ]
+
+buttonsContainer: Attribute
+buttonsContainer =
+  style [ ("width", "200px")
+        , ("position", "absolute")
+        , ("bottom", "100px")
+        , ("font-size", "50px")
+        , ("display", "flex")
+        , ("justify-content", "space-around") ]
 
 flexContainerStyle: Attribute
 flexContainerStyle =

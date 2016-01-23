@@ -8,6 +8,7 @@
     ],
     "exposed-modules": [],
     "dependencies": {
+        "Apanatshka/elm-signal-extra": "5.7.0 <= v < 6.0.0",
         "Dandandan/Easing": "2.0.1 <= v < 3.0.0",
         "ThomasWeiser/elmfire": "1.0.2 <= v < 2.0.0",
         "elm-lang/core": "3.0.0 <= v < 4.0.0",

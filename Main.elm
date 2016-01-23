@@ -9,18 +9,16 @@ import MyStartApp as StartApp
 import Gif
 import GifContainer
 import Mouse
+import Window
 
 app =
   StartApp.start
     { init = init "https://gipher.firebaseio.com"
     , update = update
     , view = view
-    , inputs = [Signal.map mousePos Mouse.position]
+    , inputs = [ Signal.map App.MousePos Mouse.position 
+               , Signal.map App.Resize Window.dimensions ]
     }
-
-mousePos: (Int, Int) -> App.Action
-mousePos pos =
-  (App.GifContainer (GifContainer.Gif (Gif.MousePos pos)))
 
 main =
   app.html

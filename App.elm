@@ -12,19 +12,13 @@ import Graphics.Element exposing (..)
 import Json.Decode exposing (..)
 import GifContainer
 import Gif
+import Global exposing ( User )
 import Html.Attributes exposing (style)
 
  -- Model
 
-type alias User =
-  { uid: String
-  , token: String
-  , displayName: String
-  }
-
 type alias Model =
-  { root: ElmFire.Location
-  , user: Maybe ( User )
+  { global: Global.Model
   , gif: GifContainer.Model
   }
 
@@ -32,8 +26,10 @@ init: String -> (Model, Effects Action)
 init init =
   let (gifModel, gifEffect) = GifContainer.init
   in
-    ({ root = ElmFire.fromUrl init
-     , user = Nothing
+    ({ global = { root = ElmFire.fromUrl init
+                , user = Nothing
+                , mouse = ( 0, 0 )
+                , window = ( 0, 0) }
      , gif = gifModel
      }, (Effects.map GifContainer gifEffect))
 
@@ -42,6 +38,8 @@ init init =
 type Action = Login (Maybe Authentication)
   | Logout
   | GifContainer GifContainer.Action
+  | MousePos ( Int, Int )
+  | Resize ( Int, Int )
 
   -- Update
 
@@ -68,32 +66,48 @@ update action model =
         Just auth ->
           let
             userObject = Just (getUserFromAuth auth)
+            global = model.global
+            newGlobal = { global | user = userObject }
           in
-            ( { model | user = userObject }
+            ( { model | global = newGlobal }
             , Effects.none )
 
         Nothing ->
-          (model, login model.root)
+          ( model, login model.global.root )
 
     Logout ->
       ( model
       , Effects.none )
 
     GifContainer gifAction ->
-      let (model1, effects) = GifContainer.update gifAction model.gif
+      let (model1, effects) = GifContainer.update gifAction model.gif model.global
       in
         ({model | gif = model1}, (Effects.map GifContainer effects))
+
+    MousePos pos ->
+    let global = model.global
+        newGlobal = { global | mouse = pos }
+    in
+      ({ model | global = newGlobal }, Effects.none )
+
+    Resize size ->
+          let global = model.global
+              newGlobal = { global | window = size }
+          in
+            ({ model | global = newGlobal }, Effects.none )
 
   -- View
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  let body = case model.user of
-    Just user -> GifContainer.view (Signal.forwardTo address GifContainer) model.gif
-    Nothing -> loginView address model
+  let
+    test = Debug.log "global" model.global
+    body = case model.global.user of
+      Just user -> GifContainer.view (Signal.forwardTo address GifContainer) model.gif model.global
+      Nothing -> loginView address model
   in
     div  [containerStyle]
-      (font :: css "gipher.css" :: body :: [])
+      (icons :: font :: css "gipher.css" :: body :: [])
 
 loginView: Signal.Address Action -> Model -> Html
 loginView address model =
@@ -108,7 +122,11 @@ css path =
 
 font: Html
 font =
-  node "link" [ href "https://fonts.googleapis.com/css?family=Source+Sans+Pro", rel "stylesheet" ] []
+  node "link" [ href "https://fonts.googleapis.com/css?family=Source+Sans+Pro", rel "stylesheet" ] [ ]
+
+icons: Html
+icons =
+  node "link" [ href "https://fonts.googleapis.com/icon?family=Material+Icons", rel "stylesheet" ] [ ]
 
 containerStyle: Attribute
 containerStyle =
