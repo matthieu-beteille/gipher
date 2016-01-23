@@ -71,11 +71,10 @@ view address model =
       Just first ->
         case tail of
           Just tail ->
-            div []
-            [ Gif.view (Signal.forwardTo address Gif) first ,
-              div [ flexContainerStyle ]
-                -- Gif.view (Signal.forwardTo address Gif) first  ::
-                (List.map image (List.take 3 tail)) ]
+            div [ flexContainerStyle ]
+              ( Gif.view (Signal.forwardTo address Gif) True first  ::
+              (List.map (Gif.view (Signal.forwardTo address Gif) False)
+                                (List.take 1 tail)) )
           Nothing -> error
 
       Nothing -> error

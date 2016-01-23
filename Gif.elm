@@ -105,40 +105,44 @@ update action model =
         in
           ({ model | animationState = newAnimationState }, effects)
 
-
-
 animate : Time -> Float -> Float -> Float
 animate currentTime start end =
   ease easeOutBounce float start end duration currentTime
 
-view: Signal.Address Action -> Model -> Html
-view address model =
-  div (getGifAttributes model address) []
+view: Signal.Address Action ->  Bool -> Model -> Html
+view address draggable model =
+  div (getGifAttributes ( model , draggable ) address) []
 
 decoder =
-  Json.object2 (,)
-    ("pageX" := Json.int)
-    ("pageY" := Json.int)
+  Json.object2 (,) ("pageX" := Json.int) ("pageY" := Json.int)
 
 translate3d x y =
   ("transform", "translate(" ++ x ++ "px, " ++ y ++ "px)")
 
-getGifAttributes: Model -> Signal.Address Action -> List (Attribute)
-getGifAttributes model address =
-  [ Html.Events.on "mousedown" decoder (\val -> Signal.message address (DragStart val))
-  , onMouseUp address DragEnd
-  , style (getStyle model) ]
+getGifAttributes: ( Model , Bool ) -> Signal.Address Action -> List (Attribute)
+getGifAttributes ( model , draggable ) address =
+  if draggable then
+    [ Html.Events.on "mousedown" decoder (\val -> Signal.message address (DragStart val))
+    , onMouseUp address DragEnd
+    , style (getStyle model draggable) ]
+  else
+    [ style (getStyle model draggable) ]
 
-getStyle: Model -> List ((String, String))
-getStyle model =
+
+getStyle: Model ->  Bool -> List ((String, String))
+getStyle model draggable =
   let { width, height } = model.gif
       { dx, dy, isClicked, elapsedTime } = Debug.log "lol" model.animationState
       transform = if isClicked
-      then translate3d (toString dx) (toString dy)
-      else translate3d (toString (animate elapsedTime (Basics.toFloat dx) 0))
-                      (toString (animate elapsedTime (Basics.toFloat dy) 0))
+        then translate3d (toString dx) (toString dy)
+        else translate3d (toString (animate elapsedTime (Basics.toFloat dx) 0))
+                        (toString (animate elapsedTime (Basics.toFloat dy) 0))
+      position = if draggable
+        then [ ( "position", "relative" ), ( "z-index", "100") ]
+        else [ ( "position", "absolute" ), ("transform", "translate(5%, -95%)") ]
   in
-    transform :: [ ("width", model.gif.width ++ "px")
+    transform ::
+    List.append position [ ("width", model.gif.width ++ "px")
     , ("height", model.gif.height ++ "px")
     , ("backgroundImage", "url(" ++ model.gif.url ++ ")")
     , ("cursor", "pointer")
