@@ -2,6 +2,8 @@ module Gif where
 
 import Json.Encode
 import Json.Decode as Json
+import Html exposing (..)
+import Html.Attributes exposing (..)
 
 type alias Model =
   { id: String
@@ -42,3 +44,26 @@ decodeGifFromFirebase =
     (Json.at ["height"] Json.string)
     (Json.at ["width"] Json.string)
     (Json.at ["height"] Json.string)
+
+cardView: Model -> Html
+cardView gif =
+  div [ getContainerStyle ] [ div [getImgStyle gif] [] ]
+
+getContainerStyle: Attribute
+getContainerStyle =
+  style [ ("border", "1px solid #BBBFBE")
+        , ("overflow-x", "hidden")
+        , ("padding", "5px")
+        , ("background-color", "white")
+        , ("cursor", "pointer")
+        , ("border-radius", "3px") ]
+
+getImgStyle: Model -> Attribute
+getImgStyle model =
+  let { width, height, url } = model
+  in
+    style [ ( "width", "200px" )
+          , ( "height", height ++ "px" )
+          , ( "backgroundImage", "url(" ++ url ++ ")" )
+          , ( "backgroundPosition", "center center" )
+          , ( "border-radius", "3px" ) ]

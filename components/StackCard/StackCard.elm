@@ -163,7 +163,7 @@ view address isFirstOfStack global index model =
           tagElement (dx > 0)
   in
     div cardAttributes
-        [ div [ getImgStyle model ] [] , tag ]
+        [ Gif.cardView model.gif , tag ]
 
 tagElement: Bool -> Html
 tagElement liked =
@@ -183,33 +183,11 @@ tagElement liked =
               , ( "opacity", "0.8") ] ]
       [ text label ]
 
-getImgStyle: Model -> Attribute
-getImgStyle model =
-  let { width, height, url } = model.gif
-  in
-    style [ ( "width", "200px" )
-          , ( "height", height ++ "px" )
-          , ( "backgroundImage", "url(" ++ url ++ ")" )
-          , ( "backgroundPosition", "center center" )
-          , ( "border-radius", "3px" ) ]
-
 decoder =
   Json.object2 (,) ("pageX" := Json.int) ("pageY" := Json.int)
 
 relativeDecoder =
   Json.object4 (,,,) ("pageX" := Json.int) ("pageY" := Json.int) ("offsetX" := Json.int) ("offsetY" := Json.int)
-
-translateAndRotate dx dy relX relY =
-  let limit = 100
-      coefX = if dx > limit then limit
-        else if dx < -limit then -limit
-        else dx
-      coefY = if dy > limit then limit
-        else if dy < -limit then -limit
-        else dy
-  in
-  [ ("transform", "translate(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px) rotate(" ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
-  , ("transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px") ]
 
 getCardAttributes:  Model ->  Bool  -> ( Int, Int ) -> Signal.Address Action -> Int -> List (Attribute)
 getCardAttributes model isFirstOfStack delta address index =
@@ -238,9 +216,16 @@ getCardStyle model isFirstOfStack ( dx, dy ) index =
         then [ ( "position", "relative" ), ( "z-index", "100") ]
         else [ ( "position", "absolute" ), ( "transform", "translate(" ++ offsetX ++ "px, -" ++ offsetY ++ "px)" ) ]
   in
-    gifOpacity :: List.concat [ transform, position, [ ("border", "1px solid #BBBFBE")
-                                                      , ("overflow-x", "hidden")
-                                                      , ("padding", "5px")
-                                                      , ("background-color", "white")
-                                                      , ("cursor", "pointer")
-                                                      , ("border-radius", "3px") ] ]
+    gifOpacity :: List.concat [ transform, position ]
+
+translateAndRotate dx dy relX relY =
+  let limit = 100
+      coefX = if dx > limit then limit
+        else if dx < -limit then -limit
+        else dx
+      coefY = if dy > limit then limit
+        else if dy < -limit then -limit
+        else dy
+  in
+  [ ("transform", "translate(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px) rotate(" ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
+  , ("transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px") ]
