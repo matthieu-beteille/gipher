@@ -8,21 +8,21 @@ import Effects exposing (..)
 import Task exposing (..)
 import Html.Events exposing ( onClick, onMouseDown, onMouseUp )
 import Debug
-import Gif
+import StackCard
 import Global
 import Result
 import String
 import ElmFire
 import Json.Encode
 
-type alias Model = List Gif.Model
+type alias Model = List StackCard.Model
 
 init: ( Model, Effects Action )
 init = ( [], fetchNewGifs )
 
 type Action = Fetch
   | NewGifs (Maybe Model)
-  | Gif Gif.Action
+  | StackCard StackCard.Action
 
 fetchNewGifs: Effects Action
 fetchNewGifs =
@@ -40,7 +40,7 @@ getUrl =
 decodeList: Json.Decoder Model
 decodeList =
   Json.object1 identity
-    ( "data" := Json.list Gif.decodeModel )
+    ( "data" := Json.list StackCard.decodeModel )
 
 -- sortByHeight: Gif.Model -> Gif.Model -> Order
 -- sortByHeight gif b =
@@ -66,12 +66,12 @@ update action model global =
         Nothing ->
           (fst init, Effects.none )
 
-    Gif gifAction ->
+    StackCard gifAction ->
       case (List.head model) of
         Just gif ->
           case (List.tail model) of
             Just tail ->
-            let ( ( gif, result ), gifEffects ) = Gif.update gifAction gif global
+            let ( ( gif, result ), gifEffects ) = StackCard.update gifAction gif global
                 next = case result of
                   0 ->
                     False
@@ -82,9 +82,9 @@ update action model global =
                     let firebaseLocation = ElmFire.sub user.uid global.root
                     in
                       if result == 1 then
-                        ElmFire.set (Gif.encodeGif gif.gif) (ElmFire.push firebaseLocation)
+                        ElmFire.set (StackCard.encodeGif gif.gif) (ElmFire.push firebaseLocation)
                           |> Task.toMaybe
-                          |> Task.map Gif.NoOp
+                          |> Task.map StackCard.NoOp
                           |> Effects.task
                       else
                         Effects.none
@@ -94,9 +94,9 @@ update action model global =
                 effects = Effects.batch [ create, gifEffects ]
             in
               if not next then
-                ( gif :: tail, Effects.map Gif effects )
+                ( gif :: tail, Effects.map StackCard effects )
               else
-                ( tail, Effects.map Gif effects )
+                ( tail, Effects.map StackCard effects )
 
             Nothing -> ( model, Effects.none )
 
@@ -112,8 +112,8 @@ view address model global =
           case tail of
             Just tail ->
               div [ flexContainerStyle ]
-                (Gif.view (Signal.forwardTo address Gif) True global 0 first ::
-                (List.reverse (List.indexedMap (Gif.view (Signal.forwardTo address Gif) False global)
+                (StackCard.view (Signal.forwardTo address StackCard) True global 0 first ::
+                (List.reverse (List.indexedMap (StackCard.view (Signal.forwardTo address StackCard) False global)
                                                (List.take 5 tail))))
             Nothing -> error
 

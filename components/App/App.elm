@@ -12,7 +12,7 @@ import Graphics.Element exposing (..)
 import Json.Decode exposing (..)
 import Json.Encode
 import Stack
-import Gif
+import StackCard
 import Global exposing ( User )
 import Html.Attributes exposing ( style )
 
@@ -21,7 +21,7 @@ import Html.Attributes exposing ( style )
 type alias Model =
   { global: Global.Model
   , newGifs: Stack.Model
-  , likedGifs: List ( Gif.Gif )
+  , likedGifs: List ( StackCard.Gif )
   }
 
 init: String -> (Model, Effects Action)
@@ -45,7 +45,7 @@ type Action
   | Stack Stack.Action
   | MousePos ( Int, Int )
   | Resize ( Int, Int )
-  | Data Gif.Gif
+  | Data StackCard.Gif
   | NoOp
 
   -- Update

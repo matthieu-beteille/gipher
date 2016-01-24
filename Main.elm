@@ -9,7 +9,7 @@ import Effects exposing (Never, Effects)
 import App exposing (..)
 import ElmFire
 import StartApp
-import Gif
+import StackCard
 import Stack
 import Mouse
 import Window
@@ -42,7 +42,7 @@ signal: Signal Action
 signal =
   Signal.map
     ( \response ->
-        let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
+        let gif = Json.Decode.decodeValue StackCard.decodeGifFromFirebase response
                   |> Result.toMaybe
         in
           case gif of
