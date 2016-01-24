@@ -1,14 +1,10 @@
 module Global where
 
 import ElmFire
-
-type alias User =
-  { uid: String
-  , token: String
-  , displayName: String }
+import Login
 
 type alias Model =
   { root: ElmFire.Location
-  , user: Maybe ( User )
+  , user: Login.Model 
   , mouse: ( Int, Int )
   , window: ( Int, Int ) }

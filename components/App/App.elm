@@ -13,7 +13,8 @@ import Json.Decode exposing (..)
 import Json.Encode
 import Stack
 import StackCard
-import Global exposing ( User )
+import Global
+import Login
 import Html.Attributes exposing ( style )
 import Gif
 
@@ -25,12 +26,14 @@ type alias Model =
   , likedGifs: List ( Gif.Model )
   }
 
+ -- init
+
 init: String -> (Model, Effects Action)
 init init =
   let ( gifModel, gifEffect ) = Stack.init
   in
     ( { global = { root = ElmFire.fromUrl init
-                 , user = Nothing
+                 , user = Login.init
                  , mouse = ( 0, 0 )
                  , window = ( 0, 0 ) }
 
@@ -41,9 +44,8 @@ init init =
   -- Actions
 
 type Action
-  = Login (Maybe Authentication)
-  | Logout
-  | Stack Stack.Action
+  = Stack Stack.Action
+  | Login Login.Action
   | MousePos ( Int, Int )
   | Resize ( Int, Int )
   | Data Gif.Model
@@ -51,51 +53,19 @@ type Action
 
   -- Update
 
-login: ElmFire.Location -> Effects Action
-login loc =
-  authenticate loc [] (withOAuthPopup "facebook")
-    |> Task.toMaybe
-    |> Task.map Login
-    |> Effects.task
-
-decodeDisplayName: Decoder String
-decodeDisplayName =
-    "displayName" := string
-
-getUserFromAuth: Authentication -> User
-getUserFromAuth auth =
-  User auth.uid auth.token (Result.withDefault "" (decodeValue decodeDisplayName auth.specifics))
-
 update: Signal.Address Json.Encode.Value -> Action -> Model -> (Model, Effects Action)
 update address action model =
   case action of
-    Login auth ->
-      case auth of
-        Just auth ->
-          let user = (getUserFromAuth auth)
-              userObject = Just user
-              global = model.global
-              newGlobal = { global | user = userObject }
-              effects = ElmFire.subscribe
-                          (Signal.send address << .value)
-                          (always (Task.succeed ()))
-                          (childAdded noOrder)
-                          (ElmFire.sub user.uid model.global.root)
-                            |> Task.toMaybe
-                            |> Task.map (always NoOp)
-                            |> Effects.task
-          in
-            ( { model | global = newGlobal }, effects )
+    Login loginAction ->
+      let ( newUser , effects ) = Login.update address loginAction model.global.user model.global.root
+          global = model.global
+          newGlobal = { global | user = newUser }
+      in
+        ( { model | global = newGlobal }, (Effects.map Login effects) )
 
-        Nothing ->
-          ( model, login model.global.root )
-
-    Logout ->
-      ( model, Effects.none )
-
-    Stack containerAction ->
+    Stack stackAction ->
       let ( newModel, effects ) = Stack.update
-                                    containerAction
+                                    stackAction
                                     model.newGifs
                                     model.global
       in
@@ -117,7 +87,7 @@ update address action model =
       ( model, Effects.none )
 
     Data gif ->
-      let newLikedGifs = gif :: model.likedGifs
+      let newLikedGifs = (Debug.log "received") gif :: model.likedGifs
       in
         ( { model | likedGifs = newLikedGifs } , Effects.none )
 
@@ -130,14 +100,9 @@ view address model =
       Just user ->
         Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
       Nothing ->
-        loginView address model
+        Login.loginView (Signal.forwardTo address Login) model.global.user
   in
     div [ containerStyle ] (icons :: font :: css "gipher.css" :: body :: [])
-
-loginView: Signal.Address Action -> Model -> Html
-loginView address model =
-  div [] [ h1 [titleStyle] [text "Gipher"]
-          , div [btnStyle] [ a [onClick address (Login Nothing)] [text "Login with Facebook"] ] ]
 
 
 css: String -> Html
@@ -163,22 +128,3 @@ containerStyle =
         , ("display", "flex")
         , ("justify-content", "center")
         , ("align-items", "center") ]
-
-titleStyle: Attribute
-titleStyle =
-  style [ ("color", "white")
-        , ("text-align", "center")
-        , ("margin-bottom", "50px")
-        , ("font-size", "2.5em") ]
-
-btnStyle : Attribute
-btnStyle =
-  style [ ("font-size", "20px")
-        , ("color", "white")
-        , ("cursor", "pointer")
-        , ("display", "inline-block")
-        , ("width", "100px")
-        , ("text-align", "center")
-        , ("border", "1px solid white")
-        , ("border-radius", "3px")
-        , ("padding", "10px") ]
