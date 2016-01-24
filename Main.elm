@@ -1,5 +1,7 @@
 import ElmFire.Auth exposing (..)
 import ElmFire exposing (ErrorType)
+import Json.Encode exposing (encode)
+import Json.Decode
 import Graphics.Element exposing (..)
 import Task exposing (..)
 import TaskTutorial exposing (print)
@@ -12,8 +14,8 @@ import Container
 import Mouse
 import Window
 
-responses : Signal.Mailbox (Maybe ElmFire.Snapshot)
-responses = Signal.mailbox Nothing
+responses : Signal.Mailbox Json.Encode.Value
+responses = Signal.mailbox Json.Encode.null
 
 app =
   let (model, effects) = init "https://gipher.firebaseio.com"
@@ -37,12 +39,13 @@ port tasks =
 
 signal: Signal Action
 signal = Signal.map
-        (\response -> case response of
-            Nothing -> App.NoOp
-            Just snapshot ->
-              let test = (Debug.log "lol" snapshot)
-              in App.NoOp
-        )
+        ( \response ->
+            let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
+                      |> Result.toMaybe
+            in
+              case gif of
+                Just value ->  App.Data value
+                Nothing -> App.NoOp )
         responses.signal
 
 -- to get the initial window size

@@ -21,32 +21,31 @@ import Easing exposing (..)
 import Time exposing (Time, millisecond)
 
 type alias Gif =
-    { id: String
-    , url: String
-    , width: String
-    , height: String
-    , smallWidth: String
-    , smallHeight: String }
+  { id: String
+  , url: String
+  , width: String
+  , height: String
+  , smallWidth: String
+  , smallHeight: String }
 
 type alias AnimationModel =
-    { isClicked: Bool
-      , opacityElapsedTime: Time
-      , elapsedTime: Time
-      , prevClockTime: Time
-      , startPos: ( Int, Int )
-      , relativeStartPos: ( Int, Int )
-      , endPos: ( Int, Int )
-      }
+  { isClicked: Bool
+  , opacityElapsedTime: Time
+  , elapsedTime: Time
+  , prevClockTime: Time
+  , startPos: ( Int, Int )
+  , relativeStartPos: ( Int, Int )
+  , endPos: ( Int, Int ) }
 
 type alias Model =
-    { animationState: AnimationModel
-    , gif: Gif }
+  { animationState: AnimationModel
+  , gif: Gif }
 
 -- actions
 
 type Action
-  = DragStart (Int, Int, Int, Int)
-  | DragEnd (Int, Int)
+  = DragStart ( Int, Int, Int, Int )
+  | DragEnd ( Int, Int )
   | DragTick Time
   | FadeTick Time
   | NoOp (Maybe ElmFire.Reference)
@@ -60,37 +59,53 @@ duration =
 
 encodeGif : Gif -> Json.Encode.Value
 encodeGif gif =
-    Json.Encode.object
-        [ ( "url", Json.Encode.string gif.url )
-        , ( "width", Json.Encode.string gif.width )
-        , ( "height", Json.Encode.string gif.height )
-        , ( "smallWidth", Json.Encode.string gif.smallWidth )
-        , ( "smallHeight", Json.Encode.string gif.smallHeight )
-        , ( "id", Json.Encode.string gif.id )
-        ]
+  Json.Encode.object
+    [ ( "url", Json.Encode.string gif.url )
+    , ( "width", Json.Encode.string gif.width )
+    , ( "height", Json.Encode.string gif.height )
+    , ( "smallWidth", Json.Encode.string gif.smallWidth )
+    , ( "smallHeight", Json.Encode.string gif.smallHeight )
+    , ( "id", Json.Encode.string gif.id ) ]
 
 decodeModel: Json.Decoder Model
 decodeModel =
-  Json.object2 Model decodeAnimationModel decodeGif
+  Json.object2
+    Model
+    decodeAnimationModel
+    decodeGifFromGiphy
 
 decodeAnimationModel: Json.Decoder AnimationModel
 decodeAnimationModel =
-  Json.object7 AnimationModel (Json.succeed False)
-                              (Json.succeed (0 * millisecond))
-                              (Json.succeed (0 * millisecond))
-                              (Json.succeed (0 * millisecond))
-                              (Json.succeed (0, 0))
-                              (Json.succeed (0, 0))
-                              (Json.succeed (0, 0))
+  Json.object7
+    AnimationModel
+    (Json.succeed False)
+    (Json.succeed (0 * millisecond))
+    (Json.succeed (0 * millisecond))
+    (Json.succeed (0 * millisecond))
+    (Json.succeed (0, 0))
+    (Json.succeed (0, 0))
+    (Json.succeed (0, 0))
 
-decodeGif: Json.Decoder Gif
-decodeGif =
-  Json.object6 Gif (Json.at ["id"] Json.string)
-                  (Json.at ["images", "fixed_height", "url"] Json.string)
-                  (Json.at ["images", "fixed_height", "width"] Json.string)
-                  (Json.at ["images", "fixed_height", "height"] Json.string)
-                  (Json.at ["images", "fixed_height_small", "width"] Json.string)
-                  (Json.at ["images", "fixed_height_small", "height"] Json.string)
+decodeGifFromGiphy: Json.Decoder Gif
+decodeGifFromGiphy =
+  Json.object6
+    Gif
+    (Json.at ["id"] Json.string)
+    (Json.at ["images", "fixed_height", "url"] Json.string)
+    (Json.at ["images", "fixed_height", "width"] Json.string)
+    (Json.at ["images", "fixed_height", "height"] Json.string)
+    (Json.at ["images", "fixed_height_small", "width"] Json.string)
+    (Json.at ["images", "fixed_height_small", "height"] Json.string)
+
+decodeGifFromFirebase: Json.Decoder Gif
+decodeGifFromFirebase =
+  Json.object6
+    Gif (Json.at ["id"] Json.string)
+    (Json.at ["url"] Json.string)
+    (Json.at ["width"] Json.string)
+    (Json.at ["height"] Json.string)
+    (Json.at ["width"] Json.string)
+    (Json.at ["height"] Json.string)
 
 
 calculateElapsedTime: Time -> Time -> Time -> Time
@@ -102,13 +117,15 @@ calculateElapsedTime clockTime prevClockTime elapsedTime  =
 
 -- update
 
-update: Action -> Model -> Global.Model -> (( Model, Int ), Effects Action)
+update: Action -> Model -> Global.Model -> ( ( Model, Int ), Effects Action )
 update action model global =
-  let { startPos, endPos, isClicked, elapsedTime, prevClockTime, opacityElapsedTime, relativeStartPos } = model.animationState
+  let { startPos, endPos, isClicked
+      , elapsedTime, prevClockTime
+      , opacityElapsedTime, relativeStartPos } = model.animationState
   in
     case action of
       DragStart (x, y, a, b) ->
-          (({ model | animationState = (AnimationModel True 0 0 0 (x, y) (a, b) endPos) }, 0), Effects.none)
+          ( ( { model | animationState = (AnimationModel True 0 0 0 ( x, y ) ( a, b ) endPos) }, 0 ), Effects.none)
 
       DragEnd newEndPos ->
         let (dx, dy) = newEndPos
@@ -122,11 +139,14 @@ update action model global =
             (({ model | animationState = newAnimationState }, 0), Effects.tick DragTick)
 
       FadeTick clockTime ->
-        let newElapsedTime = calculateElapsedTime clockTime prevClockTime opacityElapsedTime
+        let newElapsedTime = calculateElapsedTime
+                              clockTime
+                              prevClockTime
+                              opacityElapsedTime
             oldAnimationState = model.animationState
         in
           if newElapsedTime > duration then
-            let newAnimationState = { oldAnimationState | opacityElapsedTime = 0, prevClockTime = 0}
+            let newAnimationState = { oldAnimationState | opacityElapsedTime = 0, prevClockTime = 0 }
                 result = if (fst endPos) > 0 then 1 else -1
             in
               ( ( { model | animationState = newAnimationState }, result ), Effects.none )
@@ -136,18 +156,22 @@ update action model global =
               ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick FadeTick )
 
       DragTick clockTime ->
-        let newElapsedTime = calculateElapsedTime clockTime prevClockTime elapsedTime
+        let newElapsedTime = calculateElapsedTime
+                              clockTime
+                              prevClockTime
+                              elapsedTime
             oldAnimationState = model.animationState
-            newAnimationState = if newElapsedTime > duration then
-              { oldAnimationState | elapsedTime = 0, prevClockTime = 0, endPos = ( 0, 0 ) }
-            else
-              { oldAnimationState | elapsedTime = newElapsedTime, prevClockTime = clockTime }
+            newAnimationState = if newElapsedTime > duration
+              then
+                { oldAnimationState | elapsedTime = 0, prevClockTime = 0, endPos = ( 0, 0 ) }
+              else
+                { oldAnimationState | elapsedTime = newElapsedTime, prevClockTime = clockTime }
             effects = if newElapsedTime > duration then
               Effects.none
             else
               Effects.tick DragTick
         in
-          ( ( { model | animationState = newAnimationState }, 0 ), effects)
+          ( ( { model | animationState = newAnimationState }, 0 ), effects )
 
       NoOp ref -> ( ( model, 0 ), Effects.none )
 
@@ -161,8 +185,14 @@ animateOpacity currentTime start end =
 
 view: Signal.Address Action -> Bool -> Global.Model -> Int -> Model -> Html
 view address isFirstOfStack global index model =
-  div (getCardAttributes ( model, isFirstOfStack ) global  address index)
-    [ div [ getImgStyle model ] [] ]
+  let cardAttributes = getCardAttributes
+                        ( model, isFirstOfStack )
+                         global
+                         address
+                         index
+  in
+    div cardAttributes
+        [ div [ getImgStyle model ] [] ]
 
 getImgStyle: Model -> Attribute
 getImgStyle model =
@@ -178,7 +208,7 @@ decoder =
   Json.object2 (,) ("pageX" := Json.int) ("pageY" := Json.int)
 
 relativeDecoder =
-    Json.object4 (,,,) ("pageX" := Json.int) ("pageY" := Json.int) ("offsetX" := Json.int) ("offsetY" := Json.int)
+  Json.object4 (,,,) ("pageX" := Json.int) ("pageY" := Json.int) ("offsetX" := Json.int) ("offsetY" := Json.int)
 
 translateAndRotate dx dy relX relY =
   let limitX = 100
@@ -203,7 +233,7 @@ getCardAttributes ( model , isFirstOfStack ) global address index =
     else
       [ style (getCardStyle model isFirstOfStack delta index) ]
 
-getCardStyle: Model ->  Bool  -> ( Int, Int ) -> Int -> List ((String, String))
+getCardStyle: Model ->  Bool  -> ( Int, Int ) -> Int -> List (( String, String ))
 getCardStyle model isFirstOfStack ( dx, dy ) index =
   let { elapsedTime, isClicked, opacityElapsedTime, relativeStartPos } = model.animationState
       ( relX, relY ) = relativeStartPos
