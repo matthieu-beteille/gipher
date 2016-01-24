@@ -185,15 +185,42 @@ easeOpacity currentTime start end =
 
 view: Signal.Address Action -> Bool -> Global.Model -> Int -> Model -> Html
 view address isFirstOfStack global index model =
-  let cardAttributes = getCardAttributes
+  let { startPos, endPos, isClicked, elapsedTime } = model.animationState
+      ( startX, startY ) = startPos
+      ( mouseX, mouseY ) = global.mouse
+      delta = if isClicked then ( mouseX - startX, mouseY - startY ) else endPos
+      cardAttributes = getCardAttributes
                          model
                          isFirstOfStack
-                         global
+                         delta
                          address
                          index
+      dx = fst delta
+      tag = if (abs dx) < 10 then
+          div [] []
+        else
+          tagElement (dx > 0)
   in
     div cardAttributes
-        [ div [ getImgStyle model ] [] ]
+        [ div [ getImgStyle model ] [] , tag ]
+
+tagElement: Bool -> Html
+tagElement liked =
+  let label = if liked then "LIKED" else "NOPE"
+      color = if liked then "#00FF95" else "#FF2300"
+  in
+    div
+      [ style [ ( "position", "absolute" )
+              , ( "top", "25px" )
+              , ( "transform", "rotateZ(-25deg)" )
+              , ( "left", "20px" )
+              , ( "font-size", "30px" )
+              , ( "color", color )
+              , ( "border", "3px solid" )
+              , ( "border-radius", "10px" )
+              , ( "padding", "5px" )
+              , ( "opacity", "0.8") ] ]
+      [ text label ]
 
 getImgStyle: Model -> Attribute
 getImgStyle model =
@@ -223,19 +250,14 @@ translateAndRotate dx dy relX relY =
   [ ("transform", "translate(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px) rotate(" ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
   , ("transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px") ]
 
-getCardAttributes:  Model ->  Bool  -> Global.Model -> Signal.Address Action -> Int -> List (Attribute)
-getCardAttributes model isFirstOfStack global address index =
-  let { startPos, endPos, isClicked, elapsedTime } = model.animationState
-      ( startX, startY ) = startPos
-      ( mouseX, mouseY ) = global.mouse
-      delta = if isClicked then ( mouseX - startX, mouseY - startY ) else endPos
-  in
-    if isFirstOfStack then
-      [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
-      , Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
-      , style (getCardStyle model isFirstOfStack delta index) ]
-    else
-      [ style (getCardStyle model isFirstOfStack delta index) ]
+getCardAttributes:  Model ->  Bool  -> ( Int, Int ) -> Signal.Address Action -> Int -> List (Attribute)
+getCardAttributes model isFirstOfStack delta address index =
+  if isFirstOfStack then
+    [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
+    , Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
+    , style (getCardStyle model isFirstOfStack delta index) ]
+  else
+    [ style (getCardStyle model isFirstOfStack delta index) ]
 
 getCardStyle: Model ->  Bool  -> ( Int, Int ) -> Int -> List (( String, String ))
 getCardStyle model isFirstOfStack ( dx, dy ) index =
