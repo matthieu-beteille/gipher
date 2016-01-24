@@ -17,16 +17,9 @@ import Maybe
 import Basics exposing (abs)
 import Global
 import ElmFire
+import Gif
 import Easing exposing (..)
 import Time exposing (Time, millisecond)
-
-type alias Gif =
-  { id: String
-  , url: String
-  , width: String
-  , height: String
-  , smallWidth: String
-  , smallHeight: String }
 
 type alias AnimationModel =
   { isClicked: Bool
@@ -39,7 +32,7 @@ type alias AnimationModel =
 
 type alias Model =
   { animationState: AnimationModel
-  , gif: Gif }
+  , gif: Gif.Model }
 
 -- actions
 
@@ -57,22 +50,12 @@ duration =
 
 -- init models from json
 
-encodeGif : Gif -> Json.Encode.Value
-encodeGif gif =
-  Json.Encode.object
-    [ ( "url", Json.Encode.string gif.url )
-    , ( "width", Json.Encode.string gif.width )
-    , ( "height", Json.Encode.string gif.height )
-    , ( "smallWidth", Json.Encode.string gif.smallWidth )
-    , ( "smallHeight", Json.Encode.string gif.smallHeight )
-    , ( "id", Json.Encode.string gif.id ) ]
-
 decodeModel: Json.Decoder Model
 decodeModel =
   Json.object2
     Model
     decodeAnimationModel
-    decodeGifFromGiphy
+    Gif.decodeGifFromGiphy
 
 decodeAnimationModel: Json.Decoder AnimationModel
 decodeAnimationModel =
@@ -85,28 +68,6 @@ decodeAnimationModel =
     (Json.succeed (0, 0))
     (Json.succeed (0, 0))
     (Json.succeed (0, 0))
-
-decodeGifFromGiphy: Json.Decoder Gif
-decodeGifFromGiphy =
-  Json.object6
-    Gif
-    (Json.at ["id"] Json.string)
-    (Json.at ["images", "fixed_height", "url"] Json.string)
-    (Json.at ["images", "fixed_height", "width"] Json.string)
-    (Json.at ["images", "fixed_height", "height"] Json.string)
-    (Json.at ["images", "fixed_height_small", "width"] Json.string)
-    (Json.at ["images", "fixed_height_small", "height"] Json.string)
-
-decodeGifFromFirebase: Json.Decoder Gif
-decodeGifFromFirebase =
-  Json.object6
-    Gif (Json.at ["id"] Json.string)
-    (Json.at ["url"] Json.string)
-    (Json.at ["width"] Json.string)
-    (Json.at ["height"] Json.string)
-    (Json.at ["width"] Json.string)
-    (Json.at ["height"] Json.string)
-
 
 calculateElapsedTime: Time -> Time -> Time -> Time
 calculateElapsedTime clockTime prevClockTime elapsedTime  =

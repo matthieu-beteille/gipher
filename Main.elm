@@ -13,6 +13,7 @@ import StackCard
 import Stack
 import Mouse
 import Window
+import Gif
 
 responses: Signal.Mailbox Json.Encode.Value
 responses =
@@ -42,7 +43,7 @@ signal: Signal Action
 signal =
   Signal.map
     ( \response ->
-        let gif = Json.Decode.decodeValue StackCard.decodeGifFromFirebase response
+        let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
                   |> Result.toMaybe
         in
           case gif of

@@ -14,6 +14,7 @@ import Result
 import String
 import ElmFire
 import Json.Encode
+import Gif
 
 type alias Model = List StackCard.Model
 
@@ -82,7 +83,7 @@ update action model global =
                     let firebaseLocation = ElmFire.sub user.uid global.root
                     in
                       if result == 1 then
-                        ElmFire.set (StackCard.encodeGif gif.gif) (ElmFire.push firebaseLocation)
+                        ElmFire.set (Gif.encodeGif gif.gif) (ElmFire.push firebaseLocation)
                           |> Task.toMaybe
                           |> Task.map StackCard.NoOp
                           |> Effects.task
