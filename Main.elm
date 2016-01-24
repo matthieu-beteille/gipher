@@ -10,7 +10,7 @@ import App exposing (..)
 import ElmFire
 import StartApp
 import Gif
-import Container
+import Stack
 import Mouse
 import Window
 

@@ -175,18 +175,19 @@ update action model global =
 
       NoOp ref -> ( ( model, 0 ), Effects.none )
 
-animate: Time -> Float -> Float -> Float
-animate currentTime start end =
+easeBack: Time -> Float -> Float -> Float
+easeBack currentTime start end =
   ease easeOutBounce float start end duration currentTime
 
-animateOpacity : Time -> Float -> Float -> Float
-animateOpacity currentTime start end =
+easeOpacity : Time -> Float -> Float -> Float
+easeOpacity currentTime start end =
   ease easeOutExpo float start end duration currentTime
 
 view: Signal.Address Action -> Bool -> Global.Model -> Int -> Model -> Html
 view address isFirstOfStack global index model =
   let cardAttributes = getCardAttributes
-                        ( model, isFirstOfStack )
+                         model
+                         isFirstOfStack
                          global
                          address
                          index
@@ -211,16 +212,19 @@ relativeDecoder =
   Json.object4 (,,,) ("pageX" := Json.int) ("pageY" := Json.int) ("offsetX" := Json.int) ("offsetY" := Json.int)
 
 translateAndRotate dx dy relX relY =
-  let limitX = 100
-      newX = if (dx) > limitX then limitX
-        else if (dx) < -limitX then -limitX
-        else (dx)
+  let limit = 100
+      coefX = if dx > limit then limit
+        else if dx < -limit then -limit
+        else dx
+      coefY = if dy > limit then limit
+        else if dy < -limit then -limit
+        else dy
   in
-  [ ("transform", "translate(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px) rotate(" ++ (toString (0.20 * newX)) ++ "deg)")
+  [ ("transform", "translate(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px) rotate(" ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
   , ("transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px") ]
 
-getCardAttributes: ( Model , Bool ) -> Global.Model -> Signal.Address Action -> Int -> List (Attribute)
-getCardAttributes ( model , isFirstOfStack ) global address index =
+getCardAttributes:  Model ->  Bool  -> Global.Model -> Signal.Address Action -> Int -> List (Attribute)
+getCardAttributes model isFirstOfStack global address index =
   let { startPos, endPos, isClicked, elapsedTime } = model.animationState
       ( startX, startY ) = startPos
       ( mouseX, mouseY ) = global.mouse
@@ -243,10 +247,10 @@ getCardStyle model isFirstOfStack ( dx, dy ) index =
         |> Maybe.withDefault 200
       offsetX = toString (3 * (1 + index))
       offsetY = toString (13 + height + (3 * (1 + index)))
-      gifOpacity = ("opacity", (toString (animateOpacity opacityElapsedTime 1 0)))
+      gifOpacity = ("opacity", (toString (easeOpacity opacityElapsedTime 1 0)))
       transform = if isClicked
         then translateAndRotate (toFloat dx) (toFloat dy) relX relY
-        else translateAndRotate (animate elapsedTime (Basics.toFloat dx) 0) (animate elapsedTime (Basics.toFloat dy) 0) relX relY
+        else translateAndRotate (easeBack elapsedTime (Basics.toFloat dx) 0) (easeBack elapsedTime (Basics.toFloat dy) 0) relX relY
       position = if isFirstOfStack
         then [ ( "position", "relative" ), ( "z-index", "100") ]
         else [ ( "position", "absolute" ), ( "transform", "translate(" ++ offsetX ++ "px, -" ++ offsetY ++ "px)" ) ]

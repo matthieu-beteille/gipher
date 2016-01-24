@@ -1,4 +1,4 @@
-module Container where
+module Stack where
 
 import Json.Decode as Json exposing ( (:=) )
 import Http exposing (..)

@@ -11,7 +11,7 @@ import ElmFire exposing ( Snapshot, childAdded, noOrder, noLimit )
 import Graphics.Element exposing (..)
 import Json.Decode exposing (..)
 import Json.Encode
-import Container
+import Stack
 import Gif
 import Global exposing ( User )
 import Html.Attributes exposing ( style )
@@ -20,13 +20,13 @@ import Html.Attributes exposing ( style )
 
 type alias Model =
   { global: Global.Model
-  , newGifs: Container.Model
+  , newGifs: Stack.Model
   , likedGifs: List ( Gif.Gif )
   }
 
 init: String -> (Model, Effects Action)
 init init =
-  let ( gifModel, gifEffect ) = Container.init
+  let ( gifModel, gifEffect ) = Stack.init
   in
     ( { global = { root = ElmFire.fromUrl init
                  , user = Nothing
@@ -35,14 +35,14 @@ init init =
 
      , newGifs = gifModel
 
-     , likedGifs = [] }, (Effects.map Container gifEffect) )
+     , likedGifs = [] }, (Effects.map Stack gifEffect) )
 
   -- Actions
 
 type Action
   = Login (Maybe Authentication)
   | Logout
-  | Container Container.Action
+  | Stack Stack.Action
   | MousePos ( Int, Int )
   | Resize ( Int, Int )
   | Data Gif.Gif
@@ -92,13 +92,13 @@ update address action model =
     Logout ->
       ( model, Effects.none )
 
-    Container containerAction ->
-      let ( newModel, effects ) = Container.update
+    Stack containerAction ->
+      let ( newModel, effects ) = Stack.update
                                     containerAction
                                     model.newGifs
                                     model.global
       in
-        ( { model | newGifs = newModel }, (Effects.map Container effects) )
+        ( { model | newGifs = newModel }, (Effects.map Stack effects) )
 
     MousePos pos ->
     let global = model.global
@@ -127,7 +127,7 @@ view address model =
   let
     body = case model.global.user of
       Just user ->
-        Container.view (Signal.forwardTo address Container) model.newGifs model.global
+        Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
       Nothing ->
         loginView address model
   in
