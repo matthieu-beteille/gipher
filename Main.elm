@@ -14,8 +14,9 @@ import Container
 import Mouse
 import Window
 
-responses : Signal.Mailbox Json.Encode.Value
-responses = Signal.mailbox Json.Encode.null
+responses: Signal.Mailbox Json.Encode.Value
+responses =
+  Signal.mailbox Json.Encode.null
 
 app =
   let (model, effects) = init "https://gipher.firebaseio.com"
@@ -32,36 +33,38 @@ app =
 main =
   app.html
 
-port tasks : Signal (Task.Task Never ())
+port tasks: Signal (Task.Task Never ())
 port tasks =
   app.tasks
 
 
 signal: Signal Action
-signal = Signal.map
-        ( \response ->
-            let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
-                      |> Result.toMaybe
-            in
-              case gif of
-                Just value ->  App.Data value
-                Nothing -> App.NoOp )
-        responses.signal
+signal =
+  Signal.map
+    ( \response ->
+        let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
+                  |> Result.toMaybe
+        in
+          case gif of
+            Just value ->  App.Data value
+            Nothing -> App.NoOp )
+    responses.signal
 
 -- to get the initial window size
 
-resizes : Signal Action
+resizes: Signal Action
 resizes =
     Signal.map App.Resize Window.dimensions
 
-appStartMailbox : Signal.Mailbox ()
+appStartMailbox: Signal.Mailbox ()
 appStartMailbox =
     Signal.mailbox ()
 
 firstResize: Signal Action
-firstResize = Signal.sampleOn appStartMailbox.signal resizes
+firstResize =
+  Signal.sampleOn appStartMailbox.signal resizes
 
-sendInitial : Effects Action
+sendInitial: Effects Action
 sendInitial =
     Signal.send appStartMailbox.address () -- Task a ()
         |> Task.map (always App.NoOp)
