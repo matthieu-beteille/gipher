@@ -1,4 +1,4 @@
-module GifContainer where
+module Container where
 
 import Json.Decode as Json exposing ((:=))
 import Http exposing (..)
@@ -12,6 +12,8 @@ import Gif
 import Global
 import Result
 import String
+import ElmFire
+import Json.Encode
 
 type alias Model = List Gif.Model
 
@@ -32,7 +34,8 @@ fetchNewGifs =
 getUrl: String
 getUrl =
   Http.url "http://api.giphy.com/v1/gifs/trending"
-    [ ("api_key", "dc6zaTOxFJmzC") ]
+    [ ("api_key", "dc6zaTOxFJmzC")
+    , ("limit", "200") ]
 
 decodeList: Json.Decoder Model
 decodeList =
@@ -69,7 +72,26 @@ update action model global =
         Just gif ->
           case (List.tail model) of
             Just tail ->
-            let ((gif, next), effects) = Gif.update gifAction gif global
+            let ((gif, result), gifEffects) = Gif.update gifAction gif global
+                next = case result of
+                  0 -> False
+                  _ -> True
+
+                create = case global.user of
+                  Just user ->
+                    let firebaseLocation = (ElmFire.sub user.uid global.root)
+                    in
+                      if result == 1 then
+                        ElmFire.set (Gif.encodeGif gif.gif) (ElmFire.push firebaseLocation)
+                          |> Task.toMaybe
+                          |> Task.map Gif.NoOp
+                          |> Effects.task
+                      else
+                        Effects.none
+
+                  Nothing -> Effects.none
+
+                effects = Effects.batch ([create, gifEffects])
             in
               if not next then
                 (gif :: tail, Effects.map Gif effects)

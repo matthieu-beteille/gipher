@@ -11,4 +11,4 @@ type alias User =
 type alias Model = { root: ElmFire.Location
           , user: Maybe ( User )
           , mouse: ( Int, Int )
-          , window: ( Int, Int )}
+          , window: ( Int, Int ) }
