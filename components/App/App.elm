@@ -112,7 +112,7 @@ update address action model =
 
     GoTo route ->
       let oldGlobal = model.global
-          newGlobal = { oldGlobal | route = route }
+          newGlobal = { oldGlobal | route = route, isMenuOpened = False }
       in
         ( { model | global = newGlobal }, Effects.none )
 
@@ -124,11 +124,14 @@ update address action model =
 view: Signal.Address Action -> Model -> Html
 view address model =
   let
+    view = case model.global.route of
+      Home -> Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
+      MyGifs -> LikedGifs.view (Signal.forwardTo address LikedGifs) model.likedGifs
     body = case model.global.user of
       Just user ->
         [ navBar address,
           overlayMenu address model.global.isMenuOpened,
-          Stack.view (Signal.forwardTo address Stack) model.newGifs model.global ]
+          view ]
       Nothing ->
         [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
   in
@@ -138,11 +141,11 @@ navBar address =
   div [ onClick address ToggleMenu, navbarStyle ] [ i [class "material-icons hover", hamburgerStyle] [text "menu"] ]
 
 overlayMenu address isOpened =
-    div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle ] [text "Home"]
-                                   , div [ class "hover", menuItemStyle, onClick address (GoTo Home)] [text "Liked Gifs"]
+    div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle, onClick address (GoTo Home) ] [text "Home"]
+                                   , div [ class "hover", menuItemStyle, onClick address (GoTo MyGifs)] [text "Liked Gifs"]
                                    , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ]
                                    , i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ]
-                                       [text "clear"] ]
+                                       [ text "clear" ] ]
 
 css: String -> Html
 css path =
@@ -160,13 +163,10 @@ icons =
 
 containerStyle: Attribute
 containerStyle =
-  style [ ( "overflow", "hidden" )
+  style [ ( "overflow-x", "hidden" )
         , ( "font-family", "Source Sans Pro" )
         , ( "background-color", "#0076E5" )
-        , ( "height", "100%" )
-        , ( "display", "flex" )
-        , ( "justify-content", "center" )
-        , ( "align-items", "center" ) ]
+        , ( "height", "100%" ) ]
 
 overlayStyle isOpened =
   let translateValue = if isOpened then "0%" else "150%"

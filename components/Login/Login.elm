@@ -64,8 +64,8 @@ getUserFromAuth auth =
 
 loginView: Signal.Address Action -> Model -> Html
 loginView address model =
-  div [] [ h1 [titleStyle] [text "Gipher"]
-          , div [btnStyle] [ a [onClick address (Login Nothing)] [text "Login with Facebook"] ] ]
+  div [ containerStyle ] [ h1 [titleStyle] [text "Gipher"]
+          , div [ btnStyle ] [ a [onClick address (Login Nothing)] [text "Login with Facebook"] ] ]
 
 login: ElmFire.Location -> Effects Action
 login loc =
@@ -73,6 +73,11 @@ login loc =
     |> Task.toMaybe
     |> Task.map Login
     |> Effects.task
+
+containerStyle: Attribute
+containerStyle =
+  style [ ( "padding-top", "120px" )
+        , ( "text-align", "center" ) ]
 
 titleStyle: Attribute
 titleStyle =

@@ -5,6 +5,8 @@ import Json.Decode as Json
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
+-- Model
+
 type alias Model =
   { id: String
   , url: String
@@ -12,6 +14,8 @@ type alias Model =
   , height: String
   , smallWidth: String
   , smallHeight: String }
+
+ -- Encoder / Decoder
 
 encodeGif : Model -> Json.Encode.Value
 encodeGif gif =
@@ -45,9 +49,13 @@ decodeGifFromFirebase =
     (Json.at ["width"] Json.string)
     (Json.at ["height"] Json.string)
 
+-- View
+
 cardView: Model -> Html
 cardView gif =
   div [ getContainerStyle ] [ div [getImgStyle gif] [] ]
+
+-- Style
 
 getContainerStyle: Attribute
 getContainerStyle =

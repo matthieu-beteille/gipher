@@ -111,7 +111,7 @@ view address model global =
         Just first ->
           case tail of
             Just tail ->
-              div [ flexContainerStyle ]
+              div []
                 (StackCard.view (Signal.forwardTo address StackCard) True global 0 first ::
                 (List.reverse (List.indexedMap (StackCard.view (Signal.forwardTo address StackCard) False global)
                                                (List.take 5 tail))))
@@ -120,7 +120,7 @@ view address model global =
         Nothing -> error
 
   in
-    div [] [ gifComponent ]
+    div [ flexContainerStyle ] [ gifComponent ]
             -- , div [ buttonsContainer ]
             --   [ i [ class "material-icons", tickStyle ] [text "done"]
             --   , i [class "material-icons", crossStyle ] [text "clear"] ] ]
@@ -156,7 +156,8 @@ flexContainerStyle =
         , ( "flex-direction", "column" )
         , ( "align-content", "center" )
         , ( "justify-content", "center" )
-        , ( "align-items", "center" ) ]
+        , ( "align-items", "center" )
+        , ( "padding-top", "150px") ]
 
 btnAttributes: Signal.Address Action -> List ( Attribute )
 btnAttributes address =
