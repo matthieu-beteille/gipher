@@ -18,6 +18,9 @@ import Login
 import Html.Attributes exposing ( style )
 import Gif
 
+firebaseUrl: String
+firebaseUrl =
+  "https://gipher.firebaseio.com"
  -- App Routes
 
 type Route
@@ -39,11 +42,11 @@ type alias Model =
 
  -- Init
 
-init: String -> (Model, Effects Action)
-init init =
-  let ( gifModel, gifEffect ) = Stack.init
+init: Bool -> (Model, Effects Action)
+init requestGifs =
+  let ( gifModel, gifEffect ) = Stack.init requestGifs
   in
-    ( { global = { root = ElmFire.fromUrl init
+    ( { global = { root = ElmFire.fromUrl firebaseUrl
                  , user = Login.init
                  , mouse = ( 0, 0 )
                  , window = ( 0, 0 )
@@ -76,7 +79,13 @@ update address action model =
           global = model.global
           newGlobal = { global | user = newUser }
       in
-        ( { model | global = newGlobal }, (Effects.map Login effects) )
+        if newUser == Nothing then
+          let
+            ( initState, initEffects ) = init (model.global.user == Nothing)
+          in
+            ( initState, Effects.batch [ initEffects, (Effects.map Login effects)] )
+        else
+          ( { model | global = newGlobal }, (Effects.map Login effects) )
 
     Stack stackAction ->
       let ( newModel, effects ) = Stack.update

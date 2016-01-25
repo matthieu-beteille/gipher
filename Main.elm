@@ -21,7 +21,7 @@ responses =
   Signal.mailbox Json.Encode.null
 
 app =
-  let (model, effects) = init "https://gipher.firebaseio.com"
+  let (model, effects) = init False
   in
     StartApp.start
       { init = (model, Effects.batch [sendInitial, effects])

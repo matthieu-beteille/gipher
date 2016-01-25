@@ -17,8 +17,12 @@ import Gif
 
 type alias Model = List StackCard.Model
 
-init: ( Model, Effects Action )
-init = ( [], fetchNewGifs )
+init: Bool -> ( Model, Effects Action )
+init requestGifs =
+  if requestGifs then
+    ( [], fetchNewGifs )
+  else
+    ( [], Effects.none )
 
 type Action = Fetch
   | NewGifs (Maybe Model)
@@ -56,7 +60,8 @@ decodeList =
 update: Action -> Model -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, b ) } -> ( Model, Effects Action )
 update action model global =
   case action of
-    Fetch -> init
+    Fetch ->
+      init True
 
     NewGifs maybeGifs ->
       case maybeGifs of
@@ -64,7 +69,7 @@ update action model global =
           ( gifs, Effects.none )
 
         Nothing ->
-          (fst init, Effects.none )
+          ( init False )
 
     StackCard gifAction ->
       case (List.head model) of
