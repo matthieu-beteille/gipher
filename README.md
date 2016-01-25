@@ -4,6 +4,7 @@ Tinder-like application for gifs allowing you to swipe trending gifs (using giph
 
 ## TODO
 
-add deploy to heroku
-create list of liked gifs
-add buttons
+- [ ] add modal with liked gif info
+- [ ] redesign login page
+- [ ] add  button swiping animation
+- [ ] add deploy to heroku

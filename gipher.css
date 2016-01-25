@@ -13,3 +13,11 @@ body > div {
 .hover:hover {
   opacity: 1;
 }
+
+.hover-btn {
+  transition: background-color ease 200ms;
+}
+
+.hover-btn:hover {
+  background-color: #BBBFBE;
+}

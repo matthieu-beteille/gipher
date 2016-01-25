@@ -21,6 +21,7 @@ import Gif
 firebaseUrl: String
 firebaseUrl =
   "https://gipher.firebaseio.com"
+
  -- App Routes
 
 type Route
@@ -91,6 +92,7 @@ update address action model =
       let ( newModel, effects ) = Stack.update
                                     stackAction
                                     model.newGifs
+                                    model.likedGifs
                                     model.global
       in
         ( { model | newGifs = newModel }, (Effects.map Stack effects) )
@@ -108,9 +110,10 @@ update address action model =
             ( { model | global = newGlobal }, Effects.none )
 
     LikedGifs action ->
-      let newLikedGifs = LikedGifs.update action model.likedGifs
+      let ( newLikedGifs, addedId ) = LikedGifs.update action model.likedGifs
+          newGifs = Stack.removeById addedId model.newGifs
       in
-        ( { model | likedGifs = newLikedGifs }, Effects.none )
+        ( { model | likedGifs = newLikedGifs, newGifs = newGifs }, Effects.none )
 
     ToggleMenu ->
       let newMenu = not model.global.isMenuOpened

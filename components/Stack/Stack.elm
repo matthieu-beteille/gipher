@@ -14,6 +14,7 @@ import String
 import ElmFire
 import Json.Encode
 import Gif
+import LikedGifs
 
 type alias Model = List StackCard.Model
 
@@ -39,7 +40,7 @@ getUrl: String
 getUrl =
   Http.url
     "http://api.giphy.com/v1/gifs/trending"
-    [ ( "api_key", "dc6zaTOxFJmzC" ), ( "limit", "200" ) ]
+    [ ( "api_key", "dc6zaTOxFJmzC" ), ( "limit", "400" ) ]
 
 decodeList: Json.Decoder Model
 decodeList =
@@ -57,8 +58,23 @@ decodeList =
 --   in
 --    compare height2 height1
 
-update: Action -> Model -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, b ) } -> ( Model, Effects Action )
-update action model global =
+removeLikedGifs: LikedGifs.Model -> Model -> Model
+removeLikedGifs likedGifs gifs =
+  let idsList = List.map (\gif -> gif.id) likedGifs
+      filteredList = List.filter (\item -> not (List.member item.gif.id idsList)) gifs
+  in
+    filteredList
+
+removeById: String -> Model -> Model
+removeById id gifs =
+  List.filter (\item -> not (item.gif.id == id)) gifs
+
+update: Action
+        -> Model
+        -> LikedGifs.Model
+        -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, b ) }
+        -> ( Model, Effects Action )
+update action model likedGifs global =
   case action of
     Fetch ->
       init True
@@ -66,7 +82,9 @@ update action model global =
     NewGifs maybeGifs ->
       case maybeGifs of
         Just gifs ->
-          ( gifs, Effects.none )
+          let filteredList = removeLikedGifs likedGifs gifs
+          in
+            ( gifs, Effects.none )
 
         Nothing ->
           ( init False )
@@ -125,17 +143,20 @@ view address model global =
         Nothing -> error
 
   in
-    div [ flexContainerStyle ] [ gifComponent ]
-            -- , div [ buttonsContainer ]
-            --   [ i [ class "material-icons", tickStyle ] [text "done"]
-            --   , i [class "material-icons", crossStyle ] [text "clear"] ] ]
+    div [ flexContainerStyle ] [ gifComponent
+            , div [ buttonsContainer ]
+              [ i [ class "material-icons hover-btn", crossStyle ] [text "clear"]
+              , i [ class "material-icons hover-btn", tickStyle ] [text "favorite"] ] ]
 
 crossStyle: Attribute
 crossStyle =
   style [ ("font-size", "50px" )
         , ("color", "#FF2300" )
         , ("cursor", "pointer" )
-        , ("border", "3px solid" )
+        , ("padding", "9px 11px" )
+        , ("transform", "translateX(2px)" )
+        , ("border", "6px solid #BBBFBE" )
+        , ("font-weight", "bold" )
         , ("border-radius", "50%" ) ]
 
 tickStyle: Attribute
@@ -143,16 +164,16 @@ tickStyle =
   style [ ("font-size", "50px" )
         , ("color", "#00FF95" )
         , ("cursor", "pointer" )
-        , ("border", "3px solid" )
+        , ("padding", "9px 11px" )
+        , ("transform", "translateX(-2px)" )
+        , ("border", "6px solid #BBBFBE" )
         , ("border-radius", "50%" ) ]
 
 buttonsContainer: Attribute
 buttonsContainer =
-  style [ ( "width", "200px" )
-        , ( "position", "absolute" )
-        , ( "bottom", "100px" )
-        , ( "font-size", "50px" )
+  style [ ( "font-size", "50px" )
         , ( "display", "flex" )
+        , ( "margin-top", "60px" )
         , ( "justify-content", "space-around" ) ]
 
 flexContainerStyle: Attribute
