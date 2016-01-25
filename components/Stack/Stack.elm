@@ -9,7 +9,6 @@ import Task exposing (..)
 import Html.Events exposing ( onClick, onMouseDown, onMouseUp )
 import Debug
 import StackCard
-import Global
 import Result
 import String
 import ElmFire
@@ -54,7 +53,7 @@ decodeList =
 --   in
 --    compare height2 height1
 
-update: Action -> Model -> Global.Model -> ( Model, Effects Action )
+update: Action -> Model -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, b ) } -> ( Model, Effects Action )
 update action model global =
   case action of
     Fetch -> init

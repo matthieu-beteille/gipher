@@ -15,7 +15,6 @@ import String
 import Result
 import Maybe
 import Basics exposing (abs)
-import Global
 import ElmFire
 import Gif
 import Easing exposing (..)
@@ -78,7 +77,7 @@ calculateElapsedTime clockTime prevClockTime elapsedTime  =
 
 -- update
 
-update: Action -> Model -> Global.Model -> ( ( Model, Int ), Effects Action )
+update: Action -> Model -> { b | window : ( Int, a ) } -> ( ( Model, Int ), Effects Action )
 update action model global =
   let { startPos, endPos, isClicked
       , elapsedTime, prevClockTime
@@ -144,7 +143,7 @@ easeOpacity : Time -> Float -> Float -> Float
 easeOpacity currentTime start end =
   ease easeOutExpo float start end duration currentTime
 
-view: Signal.Address Action -> Bool -> Global.Model -> Int -> Model -> Html
+view: Signal.Address Action -> Bool -> { a | mouse : ( Int, Int ) } -> Int -> Model -> Html
 view address isFirstOfStack global index model =
   let { startPos, endPos, isClicked, elapsedTime } = model.animationState
       ( startX, startY ) = startPos

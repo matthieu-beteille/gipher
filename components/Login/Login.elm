@@ -49,7 +49,7 @@ update address action model root =
           ( model, login root )
 
     Logout ->
-      ( model, Effects.none )
+      ( Nothing, Effects.none )
 
     NoOp ->
       ( model, Effects.none )

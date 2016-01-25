@@ -13,7 +13,6 @@ import Json.Decode exposing (..)
 import Json.Encode
 import Stack
 import StackCard
-import Global
 import Login
 import Html.Attributes exposing ( style )
 import Gif
@@ -21,10 +20,13 @@ import Gif
  -- Model
 
 type alias Model =
-  { global: Global.Model
+  { global: { root: ElmFire.Location
+            , user: Login.Model
+            , mouse: ( Int, Int )
+            , window: ( Int, Int )
+            , isMenuOpened: Bool }
   , newGifs: Stack.Model
   , likedGifs: List ( Gif.Model )
-  , isMenuOpened: Bool
   }
 
  -- init
@@ -36,12 +38,12 @@ init init =
     ( { global = { root = ElmFire.fromUrl init
                  , user = Login.init
                  , mouse = ( 0, 0 )
-                 , window = ( 0, 0 ) }
+                 , window = ( 0, 0 )
+                 , isMenuOpened = False }
 
      , newGifs = gifModel
 
-     , likedGifs = []
-     , isMenuOpened = False }, (Effects.map Stack gifEffect) )
+     , likedGifs = [] }, (Effects.map Stack gifEffect) )
 
   -- Actions
 
@@ -95,9 +97,11 @@ update address action model =
         ( { model | likedGifs = newLikedGifs }, Effects.none )
 
     ToggleMenu ->
-      let newMenu = not model.isMenuOpened
+      let newMenu = not model.global.isMenuOpened
+          oldGlobal = model.global
+          newGlobal = { oldGlobal | isMenuOpened = newMenu }
       in
-        ( { model | isMenuOpened = newMenu }, Effects.none )
+        ( { model | global = newGlobal }, Effects.none )
   -- View
 
 view: Signal.Address Action -> Model -> Html
@@ -106,7 +110,7 @@ view address model =
     body = case model.global.user of
       Just user ->
         [ navBar address,
-          overlayMenu address model.isMenuOpened,
+          overlayMenu address model.global.isMenuOpened,
           Stack.view (Signal.forwardTo address Stack) model.newGifs model.global ]
       Nothing ->
         [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
@@ -119,7 +123,7 @@ navBar address =
 overlayMenu address isOpened =
     div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle ] [text "Home"]
                                    , div [ class "hover", menuItemStyle ] [text "Liked Gifs"]
-                                   , div [ class "hover", menuItemStyle ] [ text "Logout" ]
+                                   , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ]
                                    , i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ]
                                        [text "clear"] ]
 
