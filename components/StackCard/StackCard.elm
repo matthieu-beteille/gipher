@@ -214,7 +214,7 @@ getCardStyle model isFirstOfStack ( dx, dy ) index =
         else translateAndRotate (easeBack elapsedTime (Basics.toFloat dx) 0) (easeBack elapsedTime (Basics.toFloat dy) 0) relX relY
       position = if isFirstOfStack
         then [ ( "position", "relative" ), ( "z-index", "100") ]
-        else [ ( "position", "absolute" ), ( "transform", "translate(" ++ offsetX ++ "px, -" ++ offsetY ++ "px)" ) ]
+        else [ ( "position", "absolute" ), ( "transform", "translate3d(" ++ offsetX ++ "px, -" ++ offsetY ++ "px, 0px)" ) ]
   in
     gifOpacity :: List.concat [ transform, position ]
 
@@ -227,5 +227,5 @@ translateAndRotate dx dy relX relY =
         else if dy < -limit then -limit
         else dy
   in
-  [ ("transform", "translate(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px) rotate(" ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
+  [ ("transform", "translate3d(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px, 0px) rotate3d(0,0,1," ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
   , ("transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px") ]

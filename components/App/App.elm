@@ -24,6 +24,7 @@ type alias Model =
   { global: Global.Model
   , newGifs: Stack.Model
   , likedGifs: List ( Gif.Model )
+  , isMenuOpened: Bool
   }
 
  -- init
@@ -39,7 +40,8 @@ init init =
 
      , newGifs = gifModel
 
-     , likedGifs = [] }, (Effects.map Stack gifEffect) )
+     , likedGifs = []
+     , isMenuOpened = False }, (Effects.map Stack gifEffect) )
 
   -- Actions
 
@@ -49,6 +51,7 @@ type Action
   | MousePos ( Int, Int )
   | Resize ( Int, Int )
   | Data Gif.Model
+  | ToggleMenu
   | NoOp
 
   -- Update
@@ -87,10 +90,14 @@ update address action model =
       ( model, Effects.none )
 
     Data gif ->
-      let newLikedGifs = (Debug.log "received") gif :: model.likedGifs
+      let newLikedGifs = gif :: model.likedGifs
       in
-        ( { model | likedGifs = newLikedGifs } , Effects.none )
+        ( { model | likedGifs = newLikedGifs }, Effects.none )
 
+    ToggleMenu ->
+      let newMenu = not model.isMenuOpened
+      in
+        ( { model | isMenuOpened = newMenu }, Effects.none )
   -- View
 
 view: Signal.Address Action -> Model -> Html
@@ -98,12 +105,23 @@ view address model =
   let
     body = case model.global.user of
       Just user ->
-        Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
+        [ navBar address,
+          overlayMenu address model.isMenuOpened,
+          Stack.view (Signal.forwardTo address Stack) model.newGifs model.global ]
       Nothing ->
-        Login.loginView (Signal.forwardTo address Login) model.global.user
+        [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
   in
-    div [ containerStyle ] (icons :: font :: css "gipher.css" :: body :: [])
+    div [ containerStyle ] (icons :: font :: css "gipher.css" :: body )
 
+navBar address =
+  div [ onClick address ToggleMenu, navbarStyle ] [ i [class "material-icons hover", hamburgerStyle] [text "menu"] ]
+
+overlayMenu address isOpened =
+    div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle ] [text "Home"]
+                                   , div [ class "hover", menuItemStyle ] [text "Liked Gifs"]
+                                   , div [ class "hover", menuItemStyle ] [ text "Logout" ]
+                                   , i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ]
+                                       [text "clear"] ]
 
 css: String -> Html
 css path =
@@ -121,10 +139,53 @@ icons =
 
 containerStyle: Attribute
 containerStyle =
-  style [ ("overflow", "hidden")
-        , ("font-family", "Source Sans Pro")
-        , ("background-color", "#3b5998")
-        , ("height", "100%")
-        , ("display", "flex")
-        , ("justify-content", "center")
-        , ("align-items", "center") ]
+  style [ ( "overflow", "hidden" )
+        , ( "font-family", "Source Sans Pro" )
+        , ( "background-color", "#0076E5" )
+        , ( "height", "100%" )
+        , ( "display", "flex" )
+        , ( "justify-content", "center" )
+        , ( "align-items", "center" ) ]
+
+overlayStyle isOpened =
+  let translateValue = if isOpened then "0%" else "150%"
+      opacity = if isOpened then "0.97" else "0"
+      transition = "transform 10ms ease 100ms, opacity 250ms cubic-bezier(.165,.84,.44,1)"
+  in
+    style [  ( "position", "fixed" )
+           , ( "transition", transition )
+           , ( "transform", "translate3d(0," ++ translateValue ++ ", 0)" )
+           , ( "background-color", "#00FF95" )
+           , ( "z-index", "101" )
+           , ( "top", "0" )
+           , ( "left", "0" )
+           , ( "width", "100%" )
+           , ( "height", "100%" )
+           , ( "opacity", opacity ) ]
+
+menuItemStyle =
+  style [ ( "position", "relative" )
+        , ( "top", "100px" )
+        , ( "left", "50px" )
+        , ( "line-height", "5pc" )
+        , ( "font-size", "40px" )
+        , ( "color", "white" )
+        , ( "cursor", "pointer" ) ]
+
+hamburgerStyle =
+  style [ ( "font-size", "40px" )
+        , ( "color", "white" )
+        , ( "cursor", "pointer" ) ]
+
+navbarStyle =
+  style [ ( "position", "fixed" )
+        , ( "top", "20px" )
+        , ( "left", "30px" )
+        , ( "z-index", "102" ) ]
+
+crossStyle =
+  style [ ( "position", "absolute" )
+        , ( "top", "20px" )
+        , ( "right", "30px" )
+        , ( "color", "white" )
+        , ( "cursor", "pointer" ) ]

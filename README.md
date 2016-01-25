@@ -1,8 +1,6 @@
 # Gipher
 
-I decided to build my first Elm application.
-
-This is a tinder-like application for gifs allowing you to swipe trending gifs (using giphy API).
+Tinder-like application for gifs allowing you to swipe trending gifs (using giphy API).
 
 ## TODO
 
