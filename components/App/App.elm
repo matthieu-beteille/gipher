@@ -13,9 +13,16 @@ import Json.Decode exposing (..)
 import Json.Encode
 import Stack
 import StackCard
+import LikedGifs
 import Login
 import Html.Attributes exposing ( style )
 import Gif
+
+ -- App Routes
+
+type Route
+  = Home
+  | MyGifs
 
  -- Model
 
@@ -24,12 +31,13 @@ type alias Model =
             , user: Login.Model
             , mouse: ( Int, Int )
             , window: ( Int, Int )
-            , isMenuOpened: Bool }
+            , isMenuOpened: Bool
+            , route: Route }
   , newGifs: Stack.Model
-  , likedGifs: List ( Gif.Model )
+  , likedGifs: LikedGifs.Model
   }
 
- -- init
+ -- Init
 
 init: String -> (Model, Effects Action)
 init init =
@@ -39,7 +47,8 @@ init init =
                  , user = Login.init
                  , mouse = ( 0, 0 )
                  , window = ( 0, 0 )
-                 , isMenuOpened = False }
+                 , isMenuOpened = False
+                 , route = Home }
 
      , newGifs = gifModel
 
@@ -50,10 +59,11 @@ init init =
 type Action
   = Stack Stack.Action
   | Login Login.Action
+  | LikedGifs LikedGifs.Action
   | MousePos ( Int, Int )
   | Resize ( Int, Int )
-  | Data Gif.Model
   | ToggleMenu
+  | GoTo Route
   | NoOp
 
   -- Update
@@ -88,11 +98,8 @@ update address action model =
           in
             ( { model | global = newGlobal }, Effects.none )
 
-    NoOp ->
-      ( model, Effects.none )
-
-    Data gif ->
-      let newLikedGifs = gif :: model.likedGifs
+    LikedGifs action ->
+      let newLikedGifs = LikedGifs.update action model.likedGifs
       in
         ( { model | likedGifs = newLikedGifs }, Effects.none )
 
@@ -102,6 +109,16 @@ update address action model =
           newGlobal = { oldGlobal | isMenuOpened = newMenu }
       in
         ( { model | global = newGlobal }, Effects.none )
+
+    GoTo route ->
+      let oldGlobal = model.global
+          newGlobal = { oldGlobal | route = route }
+      in
+        ( { model | global = newGlobal }, Effects.none )
+
+    NoOp ->
+      ( model, Effects.none )
+
   -- View
 
 view: Signal.Address Action -> Model -> Html
@@ -122,7 +139,7 @@ navBar address =
 
 overlayMenu address isOpened =
     div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle ] [text "Home"]
-                                   , div [ class "hover", menuItemStyle ] [text "Liked Gifs"]
+                                   , div [ class "hover", menuItemStyle, onClick address (GoTo Home)] [text "Liked Gifs"]
                                    , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ]
                                    , i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ]
                                        [text "clear"] ]

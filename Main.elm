@@ -13,6 +13,7 @@ import StackCard
 import Stack
 import Mouse
 import Window
+import LikedGifs
 import Gif
 
 responses: Signal.Mailbox Json.Encode.Value
@@ -47,7 +48,7 @@ signal =
                   |> Result.toMaybe
         in
           case gif of
-            Just value ->  App.Data value
+            Just value ->  App.LikedGifs (LikedGifs.Data value)
             Nothing -> App.NoOp )
     responses.signal
 

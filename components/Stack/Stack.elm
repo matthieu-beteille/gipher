@@ -33,9 +33,9 @@ fetchNewGifs =
 
 getUrl: String
 getUrl =
-  Http.url "http://api.giphy.com/v1/gifs/trending"
-    [ ( "api_key", "dc6zaTOxFJmzC" )
-    , ( "limit", "200" ) ]
+  Http.url
+    "http://api.giphy.com/v1/gifs/trending"
+    [ ( "api_key", "dc6zaTOxFJmzC" ), ( "limit", "200" ) ]
 
 decodeList: Json.Decoder Model
 decodeList =
@@ -123,7 +123,7 @@ view address model global =
     div [] [ gifComponent ]
             -- , div [ buttonsContainer ]
             --   [ i [ class "material-icons", tickStyle ] [text "done"]
-            --   , i [class "material-icons", crossStyle ] [text "clear"] ]]
+            --   , i [class "material-icons", crossStyle ] [text "clear"] ] ]
 
 crossStyle: Attribute
 crossStyle =

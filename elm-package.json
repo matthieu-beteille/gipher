@@ -9,7 +9,8 @@
         "components/Stack",
         "components/StackCard",
         "components/Login",
-        "components/Gif"
+        "components/Gif",
+        "components/LikedGifs"
     ],
     "exposed-modules": [],
     "dependencies": {
