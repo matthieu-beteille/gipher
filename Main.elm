@@ -24,7 +24,7 @@ app =
   let (model, effects) = init False
   in
     StartApp.start
-      { init = (model, Effects.batch [sendInitial, effects])
+      { init = (model, Effects.batch [effects, sendInitial])
       , update = (update responses.address)
       , view = view
       , inputs = [ Signal.map App.MousePos Mouse.position
@@ -68,6 +68,6 @@ firstResize =
 
 sendInitial: Effects Action
 sendInitial =
-    Signal.send appStartMailbox.address () -- Task a ()
-        |> Task.map (always App.NoOp)
-        |> Effects.task
+  Signal.send appStartMailbox.address () -- Task a ()
+      |> Task.map (always App.NoOp)
+      |> Effects.task

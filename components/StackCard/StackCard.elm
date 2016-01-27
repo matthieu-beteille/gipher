@@ -20,14 +20,20 @@ import Gif
 import Easing exposing (..)
 import Time exposing (Time, millisecond)
 
+type Animation
+  = MouseDragging
+  | DragBack
+  | FadeOut
+  | Swipe
+  | None
+
 type alias AnimationModel =
-  { isClicked: Bool
-  , opacityElapsedTime: Time
+  { animationType: Animation
   , elapsedTime: Time
   , prevClockTime: Time
-  , startPos: ( Int, Int )
-  , relativeStartPos: ( Int, Int )
-  , endPos: ( Int, Int ) }
+  , startPos: ( Float, Float )
+  , relativeStartPos: ( Float, Float )
+  , endPos: ( Float, Float ) }
 
 type alias Model =
   { animationState: AnimationModel
@@ -36,16 +42,17 @@ type alias Model =
 -- actions
 
 type Action
-  = DragStart ( Int, Int, Int, Int )
-  | DragEnd ( Int, Int )
-  | DragTick Time
-  | FadeTick Time
+  = DragStart ( Float, Float, Float, Float )
+  | DragEnd ( Float, Float )
+  | AnimationTick Time
+  | SwipeRight
+  | SwipeLeft
   | NoOp (Maybe ElmFire.Reference)
 
 -- animation duration
 
 duration =
-  200 * millisecond
+  300 * millisecond
 
 -- init models from json
 
@@ -58,10 +65,9 @@ decodeModel =
 
 decodeAnimationModel: Json.Decoder AnimationModel
 decodeAnimationModel =
-  Json.object7
+  Json.object6
     AnimationModel
-    (Json.succeed False)
-    (Json.succeed (0 * millisecond))
+    (Json.succeed None)
     (Json.succeed (0 * millisecond))
     (Json.succeed (0 * millisecond))
     (Json.succeed (0, 0))
@@ -75,63 +81,65 @@ calculateElapsedTime clockTime prevClockTime elapsedTime  =
   else
     elapsedTime + (clockTime - prevClockTime)
 
+hasBeenSwiped: ( Int, Int ) -> ( Float, Float ) -> Bool
+hasBeenSwiped ( windowWidth, windowHeight ) ( dx, dy ) =
+  (abs dx) > (toFloat (windowWidth // 4))
+
 -- update
 
-update: Action -> Model -> { b | window : ( Int, a ) } -> ( ( Model, Int ), Effects Action )
+update: Action -> Model -> { b | window : ( Int, Int ) } -> ( ( Model, Int ), Effects Action )
 update action model global =
-  let { startPos, endPos, isClicked
+  let { startPos, endPos, animationType
       , elapsedTime, prevClockTime
-      , opacityElapsedTime, relativeStartPos } = model.animationState
+      , relativeStartPos } = model.animationState
+      { animationState } = model
   in
     case action of
       DragStart (x, y, a, b) ->
-          ( ( { model | animationState = (AnimationModel True 0 0 0 ( x, y ) ( a, b ) endPos) }, 0 ), Effects.none)
+          ( ( { model | animationState = (AnimationModel MouseDragging 0 0 ( x, y ) ( a, b ) endPos) }, 0 ), Effects.none )
 
       DragEnd newEndPos ->
-        let (dx, dy) = newEndPos
-            next = (abs dx) > ((fst global.window) // 4)
-            animationState = model.animationState
-            newAnimationState = { animationState | isClicked = False, endPos = newEndPos}
+        let next = hasBeenSwiped global.window newEndPos
         in
           if next then
-            (({ model | animationState = newAnimationState }, 0), Effects.tick FadeTick)
-          else
-            (({ model | animationState = newAnimationState }, 0), Effects.tick DragTick)
-
-      FadeTick clockTime ->
-        let newElapsedTime = calculateElapsedTime
-                              clockTime
-                              prevClockTime
-                              opacityElapsedTime
-            oldAnimationState = model.animationState
-        in
-          if newElapsedTime > duration then
-            let newAnimationState = { oldAnimationState | opacityElapsedTime = 0, prevClockTime = 0 }
-                result = if (fst endPos) > 0 then 1 else -1
+            let newAnimationState = { animationState | animationType = FadeOut, endPos = newEndPos}
             in
-              ( ( { model | animationState = newAnimationState }, result ), Effects.none )
+              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick AnimationTick )
           else
-            let newAnimationState = { oldAnimationState | opacityElapsedTime = newElapsedTime, prevClockTime = clockTime }
+            let newAnimationState = { animationState | animationType = DragBack, endPos = newEndPos}
             in
-              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick FadeTick )
+              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick AnimationTick )
 
-      DragTick clockTime ->
+      AnimationTick clockTime ->
         let newElapsedTime = calculateElapsedTime
                               clockTime
                               prevClockTime
                               elapsedTime
-            oldAnimationState = model.animationState
-            newAnimationState = if newElapsedTime > duration
-              then
-                { oldAnimationState | elapsedTime = 0, prevClockTime = 0, endPos = ( 0, 0 ) }
-              else
-                { oldAnimationState | elapsedTime = newElapsedTime, prevClockTime = clockTime }
-            effects = if newElapsedTime > duration then
-              Effects.none
-            else
-              Effects.tick DragTick
         in
-          ( ( { model | animationState = newAnimationState }, 0 ), effects )
+          if newElapsedTime > duration then
+            let newAnimationState = { animationState | animationType = None, elapsedTime = 0, prevClockTime = 0 }
+                next = hasBeenSwiped global.window endPos
+                action = if next && (fst endPos) < 0 then -1
+                  else if next && (fst endPos) > 0 then 1
+                  else 0
+            in
+              ( ( { model | animationState = newAnimationState }, action ), Effects.none )
+          else
+            let newAnimationState = { animationState | elapsedTime = newElapsedTime, prevClockTime = clockTime }
+            in
+              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick AnimationTick )
+
+      SwipeRight ->
+        ( ( { model | animationState = { animationState | animationType = Swipe,
+                                                          startPos = ( 0, 0 ),
+                                                          relativeStartPos = ( 0, 0 ),
+                                                          endPos = ( (toFloat (fst global.window)), 0 ) } }, 0 ), Effects.tick AnimationTick )
+
+      SwipeLeft ->
+        ( ( { model | animationState = { animationState | animationType = Swipe,
+                                                          startPos = ( 0, 0 ),
+                                                          relativeStartPos = ( 0, 0 ),
+                                                          endPos = ( -1 * (toFloat (fst global.window)), 0 ) } }, 0 ), Effects.tick AnimationTick )
 
       NoOp ref -> ( ( model, 0 ), Effects.none )
 
@@ -143,14 +151,33 @@ easeOpacity : Time -> Float -> Float -> Float
 easeOpacity currentTime start end =
   ease easeOutExpo float start end duration currentTime
 
+getDelta: AnimationModel -> ( Int, Int ) -> ( Float, Float )
+getDelta animationModel mousePos =
+  let { startPos, endPos, animationType, elapsedTime } = animationModel
+      ( mouseX, mouseY ) = mousePos
+      ( startX, startY ) = startPos
+      ( endPosX, endPosY ) = endPos
+  in
+    case animationType of
+      MouseDragging ->
+        ( (toFloat mouseX) - startX, (toFloat mouseY) - startY )
+      DragBack ->
+        let
+          (dx, dy) = ( (toFloat mouseX) - startX, (toFloat mouseY) - startY )
+        in
+          ( (easeBack elapsedTime endPosX 0), (easeBack elapsedTime endPosY 0) )
+      Swipe ->
+        ( (easeBack elapsedTime 0 (fst endPos)), startY )
+      FadeOut ->
+         endPos
+      None ->
+        ( 0, 0 )
+
 view: Signal.Address Action -> Bool -> { a | mouse : ( Int, Int ) } -> Int -> Model -> Html
 view address isFirstOfStack global index model =
-  let { startPos, endPos, isClicked, elapsedTime } = model.animationState
-      ( startX, startY ) = startPos
-      ( mouseX, mouseY ) = global.mouse
-      delta = if isClicked then ( mouseX - startX, mouseY - startY ) else endPos
-      cardAttributes = getCardAttributes
-                         model
+  let { startPos, endPos, animationType, elapsedTime } = model.animationState
+      delta = getDelta model.animationState global.mouse
+      cardAttributes = getCardAttributes model
                          isFirstOfStack
                          delta
                          address
@@ -183,12 +210,12 @@ tagElement liked =
       [ text label ]
 
 decoder =
-  Json.object2 (,) ("pageX" := Json.int) ("pageY" := Json.int)
+  Json.object2 (,) ("pageX" := Json.float) ("pageY" := Json.float)
 
 relativeDecoder =
-  Json.object4 (,,,) ("pageX" := Json.int) ("pageY" := Json.int) ("offsetX" := Json.int) ("offsetY" := Json.int)
+  Json.object4 (,,,) ("pageX" := Json.float) ("pageY" := Json.float) ("offsetX" := Json.float) ("offsetY" := Json.float)
 
-getCardAttributes:  Model ->  Bool  -> ( Int, Int ) -> Signal.Address Action -> Int -> List (Attribute)
+getCardAttributes:  Model ->  Bool  -> ( Float, Float ) -> Signal.Address Action -> Int -> List (Attribute)
 getCardAttributes model isFirstOfStack delta address index =
   if isFirstOfStack then
     [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
@@ -197,26 +224,27 @@ getCardAttributes model isFirstOfStack delta address index =
   else
     [ style (getCardStyle model isFirstOfStack delta index) ]
 
-getCardStyle: Model ->  Bool  -> ( Int, Int ) -> Int -> List (( String, String ))
+getCardStyle: Model ->  Bool  -> ( Float, Float ) -> Int -> List (( String, String ))
 getCardStyle model isFirstOfStack ( dx, dy ) index =
-  let { elapsedTime, isClicked, opacityElapsedTime, relativeStartPos } = model.animationState
+  let { elapsedTime, animationType, relativeStartPos } = model.animationState
       ( relX, relY ) = relativeStartPos
       height  = model.gif.height
         |> String.toInt
         |> Result.toMaybe
         |> Maybe.withDefault 200
-      offsetX = toString (3 * (1 + index))
-      offsetY = toString (13 + height + (3 * (1 + index)))
-      gifOpacity = ("opacity", (toString (easeOpacity opacityElapsedTime 1 0)))
-      transform = if isClicked
-        then translateAndRotate (toFloat dx) (toFloat dy) relX relY
-        else translateAndRotate (easeBack elapsedTime (Basics.toFloat dx) 0) (easeBack elapsedTime (Basics.toFloat dy) 0) relX relY
+      offsetX = toString 0
+      offsetY = toString (13 + height - (3 * (1 + index)))
+      gifOpacity = if animationType == FadeOut
+        then toString (easeOpacity elapsedTime 1 0)
+        else "1"
+      transform = translateAndRotate dx dy relX relY
       position = if isFirstOfStack
         then [ ( "position", "relative" ), ( "z-index", "100") ]
         else [ ( "position", "absolute" ), ( "transform", "translate3d(" ++ offsetX ++ "px, -" ++ offsetY ++ "px, 0px)" ) ]
   in
-    gifOpacity :: List.concat [ transform, position ]
+    ("opacity", gifOpacity) :: List.concat [ transform, position ]
 
+translateAndRotate: Float ->  Float ->  Float ->  Float -> List ( String, String )
 translateAndRotate dx dy relX relY =
   let limit = 100
       coefX = if dx > limit then limit

@@ -83,8 +83,10 @@ update address action model =
         if newUser == Nothing then
           let
             ( initState, initEffects ) = init (model.global.user == Nothing)
+            initGlobal = initState.global
+            newGlobal = { initGlobal | window = model.global.window }
           in
-            ( initState, Effects.batch [ initEffects, (Effects.map Login effects)] )
+            ( { initState | global = newGlobal }, Effects.batch [ initEffects, (Effects.map Login effects)] )
         else
           ( { model | global = newGlobal }, (Effects.map Login effects) )
 

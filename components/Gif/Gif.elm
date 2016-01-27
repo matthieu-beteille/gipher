@@ -55,15 +55,26 @@ cardView: Model -> Html
 cardView gif =
   div [ getContainerStyle ] [ div [getImgStyle gif] [] ]
 
+-- modalView: Model -> Html
+-- cardView gif =
+--   div [ getModalStyle ] [ div [ getImgStyle gif ] [] ]
+
 -- Style
 
 getContainerStyle: Attribute
 getContainerStyle =
-  style [ ("border", "1px solid #BBBFBE")
+  style [ ("box-shadow", "0px 0px 4px 0px #0076E5" )
         , ("overflow-x", "hidden")
         , ("padding", "5px")
         , ("background-color", "white")
         , ("cursor", "pointer")
+        , ("border-radius", "3px") ]
+
+getModalStyle: Attribute
+getModalStyle =
+  style [ ("position", "fixed")
+        , ("padding", "10px")
+        , ("background-color", "white")
         , ("border-radius", "3px") ]
 
 getImgStyle: Model -> Attribute

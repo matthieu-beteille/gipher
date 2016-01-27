@@ -15,7 +15,7 @@ body > div {
 }
 
 .hover-btn {
-  transition: background-color ease 200ms;
+  transition: background-color ease 300ms;
 }
 
 .hover-btn:hover {

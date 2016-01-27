@@ -47,17 +47,6 @@ decodeList =
   Json.object1 identity
     ( "data" := Json.list StackCard.decodeModel )
 
--- sortByHeight: Gif.Model -> Gif.Model -> Order
--- sortByHeight gif b =
---   let height1 = String.toInt a.gif.height
---         |> Result.toMaybe
---         |> Maybe.withDefault 0
---       height2 = String.toInt b.gif.height
---         |> Result.toMaybe
---         |> Maybe.withDefault 0
---   in
---    compare height2 height1
-
 removeLikedGifs: LikedGifs.Model -> Model -> Model
 removeLikedGifs likedGifs gifs =
   let idsList = List.map (\gif -> gif.id) likedGifs
@@ -72,7 +61,7 @@ removeById id gifs =
 update: Action
         -> Model
         -> LikedGifs.Model
-        -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, b ) }
+        -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, Int ) }
         -> ( Model, Effects Action )
 update action model likedGifs global =
   case action of
@@ -135,7 +124,7 @@ view address model global =
           case tail of
             Just tail ->
               div []
-                (StackCard.view (Signal.forwardTo address StackCard) True global 0 first ::
+                (div [] [ StackCard.view (Signal.forwardTo address StackCard) True global 0 first ] ::
                 (List.reverse (List.indexedMap (StackCard.view (Signal.forwardTo address StackCard) False global)
                                                (List.take 5 tail))))
             Nothing -> error
@@ -145,8 +134,8 @@ view address model global =
   in
     div [ flexContainerStyle ] [ gifComponent
             , div [ buttonsContainer ]
-              [ i [ class "material-icons hover-btn", crossStyle ] [text "clear"]
-              , i [ class "material-icons hover-btn", tickStyle ] [text "favorite"] ] ]
+              [ i [ class "material-icons hover-btn", crossStyle, onClick address (StackCard StackCard.SwipeLeft) ] [text "clear"]
+              , i [ class "material-icons hover-btn", tickStyle, onClick address (StackCard StackCard.SwipeRight) ] [text "favorite"] ] ]
 
 crossStyle: Attribute
 crossStyle =
