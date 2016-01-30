@@ -19,6 +19,14 @@ import ElmFire
 import Gif
 import Easing exposing (..)
 import Time exposing (Time, millisecond)
+import Signal.Extra exposing ( keepWhen )
+
+mailBox: Signal.Mailbox Bool
+mailBox =
+  Signal.mailbox False
+
+draggingSignal =
+  keepWhen mailBox.signal ( 0, 0 ) Mouse.position
 
 type Animation
   = MouseDragging
@@ -33,7 +41,8 @@ type alias AnimationModel =
   , prevClockTime: Time
   , startPos: ( Float, Float )
   , relativeStartPos: ( Float, Float )
-  , endPos: ( Float, Float ) }
+  , endPos: ( Float, Float )
+  , mouse: ( Int, Int ) }
 
 type alias Model =
   { animationState: AnimationModel
@@ -42,12 +51,13 @@ type alias Model =
 -- actions
 
 type Action
-  = DragStart ( Float, Float, Float, Float )
+  = DragStart ( ( Float, Float ) , ( Float, Float ) )
+  | Drag ( Int, Int )
   | DragEnd ( Float, Float )
   | AnimationTick Time
   | SwipeRight
   | SwipeLeft
-  | NoOp (Maybe ElmFire.Reference)
+  | NoOp
 
 -- animation duration
 
@@ -65,7 +75,7 @@ decodeModel =
 
 decodeAnimationModel: Json.Decoder AnimationModel
 decodeAnimationModel =
-  Json.object6
+  Json.object7
     AnimationModel
     (Json.succeed None)
     (Json.succeed (0 * millisecond))
@@ -73,6 +83,9 @@ decodeAnimationModel =
     (Json.succeed (0, 0))
     (Json.succeed (0, 0))
     (Json.succeed (0, 0))
+    (Json.succeed (0, 0))
+
+-- helpers
 
 calculateElapsedTime: Time -> Time -> Time -> Time
 calculateElapsedTime clockTime prevClockTime elapsedTime  =
@@ -91,24 +104,40 @@ update: Action -> Model -> { b | window : ( Int, Int ) } -> ( ( Model, Int ), Ef
 update action model global =
   let { startPos, endPos, animationType
       , elapsedTime, prevClockTime
-      , relativeStartPos } = model.animationState
+      , relativeStartPos, mouse } = model.animationState
       { animationState } = model
   in
     case action of
-      DragStart (x, y, a, b) ->
-          ( ( { model | animationState = (AnimationModel MouseDragging 0 0 ( x, y ) ( a, b ) endPos) }, 0 ), Effects.none )
+      DragStart (pos, relativePos) ->
+        let newAnimationState = { animationState | startPos = pos, relativeStartPos = relativePos}
+            startDrag = Signal.send mailBox.address True
+                          |> Task.toMaybe
+                          |> Task.map (\_ -> NoOp)
+                          |> Effects.task
+        in
+         ( ( { model | animationState = newAnimationState }, 0 ), startDrag )
+
+      Drag newMouse ->
+        let newAnimationState = { animationState | animationType = MouseDragging, mouse = newMouse }
+        in
+          ( ({ model | animationState = newAnimationState }, 0 ), Effects.none )
 
       DragEnd newEndPos ->
         let next = hasBeenSwiped global.window newEndPos
+            endDrag = Signal.send mailBox.address False
+                        |> Task.toMaybe
+                        |> Task.map (\_ -> NoOp)
+                        |> Effects.task
+            effects = Effects.batch [ endDrag, Effects.tick AnimationTick ]
         in
           if next then
             let newAnimationState = { animationState | animationType = FadeOut, endPos = newEndPos}
             in
-              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick AnimationTick )
+              ( ( { model | animationState = newAnimationState }, 0 ), effects )
           else
             let newAnimationState = { animationState | animationType = DragBack, endPos = newEndPos}
             in
-              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick AnimationTick )
+              ( ( { model | animationState = newAnimationState }, 0 ), effects )
 
       AnimationTick clockTime ->
         let newElapsedTime = calculateElapsedTime
@@ -141,7 +170,10 @@ update action model global =
                                                           relativeStartPos = ( 0, 0 ),
                                                           endPos = ( -1 * (toFloat (fst global.window)), 0 ) } }, 0 ), Effects.tick AnimationTick )
 
-      NoOp ref -> ( ( model, 0 ), Effects.none )
+      NoOp ->
+        ( ( model, 0 ), Effects.none )
+
+-- easing
 
 easeBack: Time -> Float -> Float -> Float
 easeBack currentTime start end =
@@ -150,6 +182,8 @@ easeBack currentTime start end =
 easeOpacity : Time -> Float -> Float -> Float
 easeOpacity currentTime start end =
   ease easeOutExpo float start end duration currentTime
+
+-- delta calculation
 
 getDelta: AnimationModel -> ( Int, Int ) -> ( Float, Float )
 getDelta animationModel mousePos =
@@ -173,10 +207,12 @@ getDelta animationModel mousePos =
       None ->
         ( 0, 0 )
 
-view: Signal.Address Action -> Bool -> { a | mouse : ( Int, Int ) } -> Int -> Model -> Html
-view address isFirstOfStack global index model =
-  let { startPos, endPos, animationType, elapsedTime } = model.animationState
-      delta = getDelta model.animationState global.mouse
+-- view
+
+view: Signal.Address Action -> Bool -> Int -> Model -> Html
+view address isFirstOfStack index model =
+  let { startPos, endPos, animationType, elapsedTime, mouse } = model.animationState
+      delta = getDelta model.animationState mouse
       cardAttributes = getCardAttributes model
                          isFirstOfStack
                          delta
@@ -209,20 +245,35 @@ tagElement liked =
               , ( "opacity", "0.8") ] ]
       [ text label ]
 
+-- event decoders
+
+decoder: Json.Decoder ( Float, Float )
 decoder =
   Json.object2 (,) ("pageX" := Json.float) ("pageY" := Json.float)
 
+doubleTuple: Float -> Float -> Float -> Float -> ( ( Float, Float ), ( Float, Float ) )
+doubleTuple a b c d =
+  ( ( a, b ), ( c, d ) )
+
+relativeDecoder: Json.Decoder ( ( Float, Float ), ( Float, Float ) )
 relativeDecoder =
-  Json.object4 (,,,) ("pageX" := Json.float) ("pageY" := Json.float) ("offsetX" := Json.float) ("offsetY" := Json.float)
+  Json.object4 doubleTuple
+               ("pageX" := Json.float)
+               ("pageY" := Json.float)
+               ("offsetX" := Json.float)
+               ("offsetY" := Json.float)
+
+-- decoderTouchMove =
+--   Json.object1 identity ("touches" := Json.list decoder)
 
 getCardAttributes:  Model ->  Bool  -> ( Float, Float ) -> Signal.Address Action -> Int -> List (Attribute)
 getCardAttributes model isFirstOfStack delta address index =
-  if isFirstOfStack then
-    [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
-    , Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
-    , style (getCardStyle model isFirstOfStack delta index) ]
-  else
-    [ style (getCardStyle model isFirstOfStack delta index) ]
+    if isFirstOfStack then
+      [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
+      , Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
+      , style (getCardStyle model isFirstOfStack delta index) ]
+    else
+      [ style (getCardStyle model isFirstOfStack delta index) ]
 
 getCardStyle: Model ->  Bool  -> ( Float, Float ) -> Int -> List (( String, String ))
 getCardStyle model isFirstOfStack ( dx, dy ) index =

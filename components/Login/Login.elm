@@ -64,8 +64,9 @@ getUserFromAuth auth =
 
 loginView: Signal.Address Action -> Model -> Html
 loginView address model =
-  div [ containerStyle ] [ h1 [titleStyle] [text "Gipher"]
-          , div [ btnStyle ] [ a [onClick address (Login Nothing)] [text "Login with Facebook"] ] ]
+  div [ containerStyle ] [ h1 [ titleStyle ] [ text "Gipher" ]
+          , div [ btnStyle ] [ a [onClick address (Login Nothing)] [ i [ class "material-icons", iconStyle ] [ text "account_circle" ]
+                                                                    , text "Login with Facebook"] ] ]
 
 login: ElmFire.Location -> Effects Action
 login loc =
@@ -79,21 +80,29 @@ containerStyle =
   style [ ( "padding-top", "120px" )
         , ( "text-align", "center" ) ]
 
+iconStyle: Attribute
+iconStyle =
+  style [ ( "vertical-align", "bottom" )
+        , ( "margin-right", "10px" ) ]
+
 titleStyle: Attribute
 titleStyle =
-  style [ ("color", "white")
-        , ("text-align", "center")
-        , ("margin-bottom", "50px")
-        , ("font-size", "2.5em") ]
+  style [ ( "color", "white" )
+        , ( "text-align", "center" )
+        , ( "margin-top", "65px" )
+        , ( "margin-bottom", "50px" )
+        , ( "font-size", "2.5em" )
+        , ( "letter-spacing", "-3px" ) ]
 
 btnStyle : Attribute
 btnStyle =
-  style [ ("font-size", "20px")
-        , ("color", "white")
-        , ("cursor", "pointer")
-        , ("display", "inline-block")
-        , ("width", "100px")
-        , ("text-align", "center")
-        , ("border", "1px solid white")
-        , ("border-radius", "3px")
-        , ("padding", "10px") ]
+  style [ ( "font-size", "20px" )
+        , ( "color", "white" )
+        , ( "cursor", "pointer" )
+        , ( "display", "inline-block" )
+        , ( "width", "200px" )
+        , ( "text-align", "center" )
+        , ( "border", "1px solid white" )
+        , ( "border-radius", "3px" )
+        , ( "padding", "10px" )
+        , ( "letter-spacing", "-1px") ]

@@ -96,7 +96,7 @@ update action model likedGifs global =
                       if result == 1 then
                         ElmFire.set (Gif.encodeGif gif.gif) (ElmFire.push firebaseLocation)
                           |> Task.toMaybe
-                          |> Task.map StackCard.NoOp
+                          |> Task.map (\_ -> StackCard.NoOp)
                           |> Effects.task
                       else
                         Effects.none
@@ -124,8 +124,8 @@ view address model global =
           case tail of
             Just tail ->
               div []
-                (div [] [ StackCard.view (Signal.forwardTo address StackCard) True global 0 first ] ::
-                (List.reverse (List.indexedMap (StackCard.view (Signal.forwardTo address StackCard) False global)
+                (div [] [ StackCard.view (Signal.forwardTo address StackCard) True 0 first ] ::
+                (List.reverse (List.indexedMap (StackCard.view (Signal.forwardTo address StackCard) False)
                                                (List.take 5 tail))))
             Nothing -> error
 
@@ -172,7 +172,7 @@ flexContainerStyle =
         , ( "align-content", "center" )
         , ( "justify-content", "center" )
         , ( "align-items", "center" )
-        , ( "padding-top", "150px") ]
+        , ( "padding-top", "130px") ]
 
 btnAttributes: Signal.Address Action -> List ( Attribute )
 btnAttributes address =

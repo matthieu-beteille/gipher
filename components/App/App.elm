@@ -33,7 +33,6 @@ type Route
 type alias Model =
   { global: { root: ElmFire.Location
             , user: Login.Model
-            , mouse: ( Int, Int )
             , window: ( Int, Int )
             , isMenuOpened: Bool
             , route: Route }
@@ -49,7 +48,6 @@ init requestGifs =
   in
     ( { global = { root = ElmFire.fromUrl firebaseUrl
                  , user = Login.init
-                 , mouse = ( 0, 0 )
                  , window = ( 0, 0 )
                  , isMenuOpened = False
                  , route = Home }
@@ -64,7 +62,6 @@ type Action
   = Stack Stack.Action
   | Login Login.Action
   | LikedGifs LikedGifs.Action
-  | MousePos ( Int, Int )
   | Resize ( Int, Int )
   | ToggleMenu
   | GoTo Route
@@ -99,12 +96,6 @@ update address action model =
       in
         ( { model | newGifs = newModel }, (Effects.map Stack effects) )
 
-    MousePos pos ->
-    let global = model.global
-        newGlobal = { global | mouse = pos }
-    in
-      ( { model | global = newGlobal }, Effects.none )
-
     Resize size ->
           let global = model.global
               newGlobal = { global | window = size }
@@ -131,28 +122,29 @@ update address action model =
         ( { model | global = newGlobal }, Effects.none )
 
     NoOp ->
-      ( model, Effects.none )
+        ( model, Effects.none )
 
   -- View
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  let
-    view = case model.global.route of
-      Home -> Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
-      MyGifs -> LikedGifs.view (Signal.forwardTo address LikedGifs) model.likedGifs
-    body = case model.global.user of
-      Just user ->
-        [ navBar address,
-          overlayMenu address model.global.isMenuOpened,
-          view ]
-      Nothing ->
-        [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
+  let overflowY = model.global.route == MyGifs
+      view = case model.global.route of
+        Home -> Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
+        MyGifs -> LikedGifs.view (Signal.forwardTo address LikedGifs) model.likedGifs
+      body = case model.global.user of
+        Just user ->
+          [ navBar address,
+            overlayMenu address model.global.isMenuOpened,
+            view ]
+        Nothing ->
+          [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
   in
-    div [ containerStyle ] (icons :: font :: css "gipher.css" :: body )
+    div [ containerStyle overflowY ] (meta :: icons :: font :: css "gipher.css" :: body )
 
 navBar address =
-  div [ onClick address ToggleMenu, navbarStyle ] [ i [class "material-icons hover", hamburgerStyle] [text "menu"] ]
+  div [ onClick address ToggleMenu, navbarStyle ] [ div [class "material-icons hover", hamburgerStyle] [text "menu"]
+                                                  , div [ navbarTitleStyle ] [ text "Gipher" ] ]
 
 overlayMenu address isOpened =
     div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle, onClick address (GoTo Home) ] [text "Home"]
@@ -175,12 +167,20 @@ icons =
   node "link" [ href "https://fonts.googleapis.com/icon?family=Material+Icons"
               , rel "stylesheet" ] []
 
-containerStyle: Attribute
-containerStyle =
-  style [ ( "overflow-x", "hidden" )
-        , ( "font-family", "Source Sans Pro" )
-        , ( "background-color", "#0076E5" )
-        , ( "height", "100%" ) ]
+meta: Html
+meta =
+  node "meta" [ name "viewport"
+              , content "width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" ] []
+
+containerStyle: Bool -> Attribute
+containerStyle overflowY =
+  let overflow = if overflowY then "auto" else "hidden"
+  in
+    style [ ( "overflow-y", overflow )
+          , ( "overflow-x", "hidden" )
+          , ( "font-family", "Source Sans Pro" )
+          , ( "background-color", "#0076E5" )
+          , ( "height", "100%" ) ]
 
 overlayStyle isOpened =
   let translateValue = if isOpened then "0%" else "150%"
@@ -210,13 +210,25 @@ menuItemStyle =
 hamburgerStyle =
   style [ ( "font-size", "40px" )
         , ( "color", "white" )
-        , ( "cursor", "pointer" ) ]
+        , ( "cursor", "pointer" )
+        , ( "position", "absolute")
+        , ( "left", "30px" ) ]
 
 navbarStyle =
   style [ ( "position", "fixed" )
-        , ( "top", "20px" )
-        , ( "left", "30px" )
-        , ( "z-index", "102" ) ]
+        , ( "display", "flex" )
+        , ( "width", "100%" )
+        , ( "align-item", "center" )
+        , ( "padding-top", "20px" )
+        , ( "z-index", "102" )
+        , ( "align-items", "center" )
+        , ( "justify-content", "center" ) ]
+
+navbarTitleStyle =
+  style [ ( "letter-spacing", "-3px" )
+        , ( "color", "white" )
+        , ( "font-size", "25px" )
+        , ( "margin-top", "3px") ]
 
 crossStyle =
   style [ ( "position", "absolute" )

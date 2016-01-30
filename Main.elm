@@ -9,7 +9,7 @@ import Effects exposing (Never, Effects)
 import App exposing (..)
 import ElmFire
 import StartApp
-import StackCard
+import StackCard exposing ( mailBox )
 import Stack
 import Mouse
 import Window
@@ -27,10 +27,10 @@ app =
       { init = (model, Effects.batch [effects, sendInitial])
       , update = (update responses.address)
       , view = view
-      , inputs = [ Signal.map App.MousePos Mouse.position
-                 , resizes
+      , inputs = [ resizes
                  , firstResize
-                 , signal ] }
+                 , signal
+                 , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse))) StackCard.draggingSignal ]}
 
 main =
   app.html
@@ -38,7 +38,6 @@ main =
 port tasks: Signal (Task.Task Never ())
 port tasks =
   app.tasks
-
 
 signal: Signal Action
 signal =
