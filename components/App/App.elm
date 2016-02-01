@@ -71,58 +71,56 @@ type Action
 
 update: Signal.Address Json.Encode.Value -> Action -> Model -> (Model, Effects Action)
 update address action model =
-  case action of
-    Login loginAction ->
-      let ( newUser , effects ) = Login.update address loginAction model.global.user model.global.root
-          global = model.global
-          newGlobal = { global | user = newUser }
-      in
-        if newUser == Nothing then
-          let
-            ( initState, initEffects ) = init (model.global.user == Nothing)
-            initGlobal = initState.global
-            newGlobal = { initGlobal | window = model.global.window }
-          in
-            ( { initState | global = newGlobal }, Effects.batch [ initEffects, (Effects.map Login effects)] )
-        else
-          ( { model | global = newGlobal }, (Effects.map Login effects) )
+  let { global } = model
+  in
+    case action of
+      Login loginAction ->
+        let ( newUser , effects ) = Login.update address loginAction model.global.user model.global.root
+            newGlobal = { global | user = newUser }
+        in
+          if newUser == Nothing then
+            let
+              ( initState, initEffects ) = init (model.global.user == Nothing)
+              initGlobal = initState.global
+              newGlobal = { initGlobal | window = model.global.window }
+            in
+              ( { initState | global = newGlobal }, Effects.batch [ initEffects, (Effects.map Login effects)] )
+          else
+            ( { model | global = newGlobal }, (Effects.map Login effects) )
 
-    Stack stackAction ->
-      let ( newModel, effects ) = Stack.update
-                                    stackAction
-                                    model.newGifs
-                                    model.likedGifs
-                                    model.global
-      in
-        ( { model | newGifs = newModel }, (Effects.map Stack effects) )
+      Stack stackAction ->
+        let ( newModel, effects ) = Stack.update
+                                      stackAction
+                                      model.newGifs
+                                      model.likedGifs
+                                      model.global
+        in
+          ( { model | newGifs = newModel }, (Effects.map Stack effects) )
 
-    Resize size ->
-          let global = model.global
-              newGlobal = { global | window = size }
-          in
-            ( { model | global = newGlobal }, Effects.none )
+      Resize size ->
+            let newGlobal = { global | window = size }
+            in
+              ( { model | global = newGlobal }, Effects.none )
 
-    LikedGifs action ->
-      let ( newLikedGifs, addedId ) = LikedGifs.update action model.likedGifs
-          newGifs = Stack.removeById addedId model.newGifs
-      in
-        ( { model | likedGifs = newLikedGifs, newGifs = newGifs }, Effects.none )
+      LikedGifs action ->
+        let ( newLikedGifs, addedId ) = LikedGifs.update action model.likedGifs
+            newGifs = Stack.removeById addedId model.newGifs
+        in
+          ( { model | likedGifs = newLikedGifs, newGifs = newGifs }, Effects.none )
 
-    ToggleMenu ->
-      let newMenu = not model.global.isMenuOpened
-          oldGlobal = model.global
-          newGlobal = { oldGlobal | isMenuOpened = newMenu }
-      in
-        ( { model | global = newGlobal }, Effects.none )
+      ToggleMenu ->
+        let newMenu = not model.global.isMenuOpened
+            newGlobal = { global | isMenuOpened = newMenu }
+        in
+          ( { model | global = newGlobal }, Effects.none )
 
-    GoTo route ->
-      let oldGlobal = model.global
-          newGlobal = { oldGlobal | route = route, isMenuOpened = False }
-      in
-        ( { model | global = newGlobal }, Effects.none )
+      GoTo route ->
+        let newGlobal = { global | route = route, isMenuOpened = False }
+        in
+          ( { model | global = newGlobal }, Effects.none )
 
-    NoOp ->
-        ( model, Effects.none )
+      NoOp ->
+          ( model, Effects.none )
 
   -- View
 
@@ -140,7 +138,7 @@ view address model =
         Nothing ->
           [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
   in
-    div [ containerStyle overflowY ] (meta :: icons :: font :: css "gipher.css" :: body )
+    div [ containerStyle overflowY ] ( head :: body )
 
 navBar address =
   div [ onClick address ToggleMenu, navbarStyle ] [ div [class "material-icons hover", hamburgerStyle] [text "menu"]
@@ -152,6 +150,13 @@ overlayMenu address isOpened =
                                    , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ]
                                    , i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ]
                                        [ text "clear" ] ]
+
+head: Html
+head =
+  node "head" [] [ css "gipher.css"
+                 , meta
+                 , font
+                 , icons ]
 
 css: String -> Html
 css path =

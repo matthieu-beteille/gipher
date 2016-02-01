@@ -22,7 +22,7 @@ update action model =
 
 view: Signal.Address Action -> Model -> Html
 view address model =
-  div [ containerStyle ] (List.map Gif.cardView model)
+  div [ containerStyle ] (List.map Gif.smallView model)
 
 containerStyle =
   style [ ( "display", "flex" )

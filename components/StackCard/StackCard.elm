@@ -214,18 +214,15 @@ view address isFirstOfStack index model =
   let { startPos, endPos, animationType, elapsedTime, mouse } = model.animationState
       delta = getDelta model.animationState mouse
       cardAttributes = getCardAttributes model
-                         isFirstOfStack
                          delta
                          address
-                         index
       dx = fst delta
       tag = if (abs dx) < 10 then
           div [] []
         else
           tagElement (dx > 0)
   in
-    div cardAttributes
-        [ Gif.cardView model.gif , tag ]
+    div (getContainerAttributes delta address) [ div cardAttributes [ Gif.cardView model.gif , tag ] ]
 
 tagElement: Bool -> Html
 tagElement liked =
@@ -266,34 +263,28 @@ relativeDecoder =
 -- decoderTouchMove =
 --   Json.object1 identity ("touches" := Json.list decoder)
 
-getCardAttributes:  Model ->  Bool  -> ( Float, Float ) -> Signal.Address Action -> Int -> List (Attribute)
-getCardAttributes model isFirstOfStack delta address index =
-    if isFirstOfStack then
-      [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
-      , Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
-      , style (getCardStyle model isFirstOfStack delta index) ]
-    else
-      [ style (getCardStyle model isFirstOfStack delta index) ]
+getContainerAttributes: ( Float, Float ) -> Signal.Address Action -> List (Attribute)
+getContainerAttributes delta address =
+    [ Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
+    , style [ ( "padding", "40px") ] ]
 
-getCardStyle: Model ->  Bool  -> ( Float, Float ) -> Int -> List (( String, String ))
-getCardStyle model isFirstOfStack ( dx, dy ) index =
+getCardAttributes:  Model -> ( Float, Float ) -> Signal.Address Action -> List (Attribute)
+getCardAttributes model delta address =
+    [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
+    , style (getCardStyle model delta) ]
+
+getCardStyle: Model -> ( Float, Float ) -> List (( String, String ))
+getCardStyle model ( dx, dy ) =
   let { elapsedTime, animationType, relativeStartPos } = model.animationState
       ( relX, relY ) = relativeStartPos
-      height  = model.gif.height
-        |> String.toInt
-        |> Result.toMaybe
-        |> Maybe.withDefault 200
-      offsetX = toString 0
-      offsetY = toString (13 + height - (3 * (1 + index)))
       gifOpacity = if animationType == FadeOut
         then toString (easeOpacity elapsedTime 1 0)
         else "1"
       transform = translateAndRotate dx dy relX relY
-      position = if isFirstOfStack
-        then [ ( "position", "relative" ), ( "z-index", "100") ]
-        else [ ( "position", "absolute" ), ( "transform", "translate3d(" ++ offsetX ++ "px, -" ++ offsetY ++ "px, 0px)" ) ]
   in
-    ("opacity", gifOpacity) :: List.concat [ transform, position ]
+    ( "opacity", gifOpacity ) ::
+    ( "z-index", "100" ) ::
+    ( "position", "relative" ) :: List.concat [ transform ]
 
 translateAndRotate: Float ->  Float ->  Float ->  Float -> List ( String, String )
 translateAndRotate dx dy relX relY =
@@ -305,5 +296,5 @@ translateAndRotate dx dy relX relY =
         else if dy < -limit then -limit
         else dy
   in
-  [ ("transform", "translate3d(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px, 0px) rotate3d(0,0,1," ++ (toString (0.002 * coefX * coefY)) ++ "deg)")
-  , ("transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px") ]
+  [ ( "transform", "translate3d(" ++ (toString dx) ++ "px, " ++ (toString dy) ++ "px, 0px) rotate3d(0,0,1," ++ (toString (0.002 * coefX * coefY)) ++ "deg)" )
+  , ( "transform-origin", (toString relX) ++ "px " ++ (toString relY) ++ "px" ) ]

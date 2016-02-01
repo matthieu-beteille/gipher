@@ -13,7 +13,8 @@ import Html.Events exposing ( onClick, onMouseUp )
 type alias User =
   ({ uid: String
   , token: String
-  , displayName: String } )
+  , displayName: String
+  , subscription: Maybe (ElmFire.Subscription) } )
 
 type alias Model =
     Maybe ( User )
@@ -21,6 +22,7 @@ type alias Model =
 type Action
   = Login (Maybe Authentication)
   | Logout
+  | Subscribed (Maybe ElmFire.Subscription)
   | NoOp
 
 init =
@@ -40,7 +42,7 @@ update address action model root =
                           (childAdded noOrder)
                           (ElmFire.sub user.uid root)
                             |> Task.toMaybe
-                            |> Task.map (always NoOp)
+                            |> Task.map Subscribed
                             |> Effects.task
           in
             ( userObject, effects )
@@ -49,10 +51,28 @@ update address action model root =
           ( model, login root )
 
     Logout ->
-      ( Nothing, Effects.none )
+      let effects = case model of
+        Just user ->
+          case user.subscription of
+            Just sub -> ElmFire.unsubscribe sub
+                          |> Task.toMaybe
+                          |> Task.map (always NoOp)
+                          |> Effects.task
+            Nothing -> Effects.none
+
+        Nothing -> Effects.none
+      in
+        ( Nothing, effects )
 
     NoOp ->
-      ( model, Effects.none )
+      ( Nothing, Effects.none )
+
+    Subscribed sub ->
+      case model of
+        Just user ->
+          ( Just { user | subscription = sub }, Effects.none )
+        Nothing ->
+          ( model, Effects.none)
 
 decodeDisplayName: Decoder String
 decodeDisplayName =
@@ -60,7 +80,7 @@ decodeDisplayName =
 
 getUserFromAuth: Authentication -> User
 getUserFromAuth auth =
-  User auth.uid auth.token (Result.withDefault "" (decodeValue decodeDisplayName auth.specifics))
+  User auth.uid auth.token (Result.withDefault "" (decodeValue decodeDisplayName auth.specifics)) Nothing
 
 loginView: Signal.Address Action -> Model -> Html
 loginView address model =

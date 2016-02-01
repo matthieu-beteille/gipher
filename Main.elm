@@ -16,21 +16,20 @@ import Window
 import LikedGifs
 import Gif
 
-responses: Signal.Mailbox Json.Encode.Value
-responses =
-  Signal.mailbox Json.Encode.null
+port title: String
+port title = "Gipher"
 
 app =
   let (model, effects) = init False
   in
     StartApp.start
       { init = (model, Effects.batch [effects, sendInitial])
-      , update = (update responses.address)
+      , update = (update firebaseMailbox.address)
       , view = view
       , inputs = [ resizes
                  , firstResize
-                 , signal
-                 , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse))) StackCard.draggingSignal ]}
+                 , firebaseSignal
+                 , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse))) StackCard.draggingSignal ] }
 
 main =
   app.html
@@ -39,8 +38,12 @@ port tasks: Signal (Task.Task Never ())
 port tasks =
   app.tasks
 
-signal: Signal Action
-signal =
+firebaseMailbox: Signal.Mailbox Json.Encode.Value
+firebaseMailbox =
+  Signal.mailbox Json.Encode.null
+
+firebaseSignal: Signal Action
+firebaseSignal =
   Signal.map
     ( \response ->
         let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
@@ -49,9 +52,9 @@ signal =
           case gif of
             Just value ->  App.LikedGifs (LikedGifs.Data value)
             Nothing -> App.NoOp )
-    responses.signal
+    firebaseMailbox.signal
 
--- to get the initial window size
+-- signal to get the initial window size
 
 resizes: Signal Action
 resizes =

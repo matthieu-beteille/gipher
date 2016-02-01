@@ -118,14 +118,14 @@ update action model likedGifs global =
 view address model global =
   let currentGif = List.head model
       tail = List.tail model
-      error = div [ flexContainerStyle ] [ div [] [ text "No more gif" ] ]
+      error = div [ flexContainerStyle ] [ div [] [ text "No more gifs today" ] ]
       gifComponent = case currentGif of
         Just first ->
           case tail of
             Just tail ->
               div []
-                (div [] [ StackCard.view (Signal.forwardTo address StackCard) True 0 first ] ::
-                (List.reverse (List.indexedMap (StackCard.view (Signal.forwardTo address StackCard) False)
+                ( StackCard.view (Signal.forwardTo address StackCard) True 0 first ::
+                (List.reverse (List.indexedMap (\id gif -> Gif.stackView id gif.gif)
                                                (List.take 5 tail))))
             Nothing -> error
 
@@ -162,7 +162,7 @@ buttonsContainer: Attribute
 buttonsContainer =
   style [ ( "font-size", "50px" )
         , ( "display", "flex" )
-        , ( "margin-top", "60px" )
+        , ( "margin-top", "20px" )
         , ( "justify-content", "space-around" ) ]
 
 flexContainerStyle: Attribute
