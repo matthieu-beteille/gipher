@@ -64,6 +64,7 @@ smallView gif =
 --   div [ getModalStyle ] [ div [ getImgStyle gif ] [] ]
 -- Style
 
+getFixedWidthUrl: String -> String
 getFixedWidthUrl =
   Regex.replace Regex.All (Regex.regex "[.]gif") (\_ -> "w.gif")
 

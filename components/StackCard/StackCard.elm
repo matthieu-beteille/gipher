@@ -1,30 +1,23 @@
 module StackCard where
 
-import Json.Decode as Json exposing ((:=))
-import Json.Encode
-import Http exposing (..)
+import Json.Decode as Json exposing ( (:=) )
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Effects exposing (..)
 import Task exposing (..)
-import Html.Events exposing (onClick, onMouseDown, onMouseUp)
-import Debug
+import Html.Events exposing ( onClick, onMouseDown, onMouseUp )
 import Signal
 import Mouse
-import String
-import Result
-import Maybe
-import Basics exposing (abs)
-import ElmFire
 import Gif
 import Easing exposing (..)
-import Time exposing (Time, millisecond)
+import Time exposing ( Time, millisecond )
 import Signal.Extra exposing ( keepWhen )
 
 mailBox: Signal.Mailbox Bool
 mailBox =
   Signal.mailbox False
 
+draggingSignal: Signal ( Int, Int )
 draggingSignal =
   keepWhen mailBox.signal ( 0, 0 ) Mouse.position
 
@@ -61,6 +54,7 @@ type Action
 
 -- animation duration
 
+duration: Time
 duration =
   300 * millisecond
 

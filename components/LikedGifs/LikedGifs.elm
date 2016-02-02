@@ -1,7 +1,6 @@
 module LikedGifs where
 
 import Gif
-import Debug
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
@@ -11,6 +10,7 @@ type alias Model
 type Action
   = Data Gif.Model
 
+init: Model
 init = []
 
 update: Action -> Model -> ( Model, String )
@@ -24,6 +24,7 @@ view: Signal.Address Action -> Model -> Html
 view address model =
   div [ containerStyle ] (List.map Gif.smallView model)
 
+containerStyle: Attribute
 containerStyle =
   style [ ( "display", "flex" )
         , ( "flex-wrap", "wrap" )

@@ -4,19 +4,12 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing ( onClick, onMouseUp )
 import ElmFire exposing (..)
-import ElmFire.Auth exposing (..)
 import Effects exposing (..)
-import Task
 import ElmFire exposing ( Snapshot, childAdded, noOrder, noLimit )
-import Graphics.Element exposing (..)
-import Json.Decode exposing (..)
 import Json.Encode
 import Stack
-import StackCard
 import LikedGifs
 import Login
-import Html.Attributes exposing ( style )
-import Gif
 
 firebaseUrl: String
 firebaseUrl =
@@ -140,10 +133,11 @@ view address model =
   in
     div [ containerStyle overflowY ] ( head :: body )
 
+navBar: Signal.Address Action -> Html
 navBar address =
   div [ onClick address ToggleMenu, navbarStyle ] [ div [class "material-icons hover", hamburgerStyle] [text "menu"]
                                                   , div [ navbarTitleStyle ] [ text "Gipher" ] ]
-
+overlayMenu: Signal.Address Action -> Bool -> Html
 overlayMenu address isOpened =
     div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle, onClick address (GoTo Home) ] [text "Home"]
                                    , div [ class "hover", menuItemStyle, onClick address (GoTo MyGifs)] [text "Liked Gifs"]
@@ -187,6 +181,7 @@ containerStyle overflowY =
           , ( "background-color", "#0076E5" )
           , ( "height", "100%" ) ]
 
+overlayStyle: Bool -> Attribute
 overlayStyle isOpened =
   let translateValue = if isOpened then "0%" else "150%"
       opacity = if isOpened then "0.97" else "0"
@@ -203,6 +198,7 @@ overlayStyle isOpened =
            , ( "height", "100%" )
            , ( "opacity", opacity ) ]
 
+menuItemStyle: Attribute
 menuItemStyle =
   style [ ( "position", "relative" )
         , ( "top", "100px" )
@@ -212,6 +208,7 @@ menuItemStyle =
         , ( "color", "white" )
         , ( "cursor", "pointer" ) ]
 
+hamburgerStyle: Attribute
 hamburgerStyle =
   style [ ( "font-size", "40px" )
         , ( "color", "white" )
@@ -219,6 +216,7 @@ hamburgerStyle =
         , ( "position", "absolute")
         , ( "left", "30px" ) ]
 
+navbarStyle: Attribute
 navbarStyle =
   style [ ( "position", "fixed" )
         , ( "display", "flex" )
@@ -229,12 +227,14 @@ navbarStyle =
         , ( "align-items", "center" )
         , ( "justify-content", "center" ) ]
 
+navbarTitleStyle: Attribute
 navbarTitleStyle =
   style [ ( "letter-spacing", "-3px" )
         , ( "color", "white" )
         , ( "font-size", "25px" )
         , ( "margin-top", "3px") ]
 
+crossStyle: Attribute
 crossStyle =
   style [ ( "position", "absolute" )
         , ( "top", "20px" )

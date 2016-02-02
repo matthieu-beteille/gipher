@@ -7,12 +7,8 @@ import Html.Attributes exposing (..)
 import Effects exposing (..)
 import Task exposing (..)
 import Html.Events exposing ( onClick, onMouseDown, onMouseUp )
-import Debug
 import StackCard
-import Result
-import String
 import ElmFire
-import Json.Encode
 import Gif
 import LikedGifs
 
@@ -114,7 +110,7 @@ update action model likedGifs global =
 
         Nothing -> ( model, Effects.none )
 
-
+view: Signal.Address Action -> List StackCard.Model -> a -> Html
 view address model global =
   let currentGif = List.head model
       tail = List.tail model

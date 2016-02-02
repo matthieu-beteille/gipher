@@ -4,17 +4,17 @@ import ElmFire exposing (childAdded, noOrder)
 import ElmFire.Auth exposing (..)
 import Task
 import Effects exposing (..)
-import Json.Decode exposing (..)
 import Json.Encode
+import Json.Decode exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing ( onClick, onMouseUp )
 
 type alias User =
-  ({ uid: String
-  , token: String
-  , displayName: String
-  , subscription: Maybe (ElmFire.Subscription) } )
+  ( { uid: String
+    , token: String
+    , displayName: String
+    , subscription: Maybe (ElmFire.Subscription) } )
 
 type alias Model =
     Maybe ( User )
@@ -25,6 +25,7 @@ type Action
   | Subscribed (Maybe ElmFire.Subscription)
   | NoOp
 
+init:Model
 init =
   Nothing
 

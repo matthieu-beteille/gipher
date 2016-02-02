@@ -1,23 +1,20 @@
-import ElmFire.Auth exposing (..)
-import ElmFire exposing (ErrorType)
 import Json.Encode exposing (encode)
 import Json.Decode
-import Graphics.Element exposing (..)
 import Task exposing (..)
 import Effects exposing (Never, Effects)
 import App exposing (..)
-import ElmFire
 import StartApp
 import StackCard exposing ( mailBox )
 import Stack
-import Mouse
 import Window
 import LikedGifs
 import Gif
+import Html
 
 port title: String
 port title = "Gipher"
 
+app: StartApp.App Model
 app =
   let (model, effects) = init False
   in
@@ -28,8 +25,10 @@ app =
       , inputs = [ resizes
                  , firstResize
                  , firebaseSignal
-                 , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse))) StackCard.draggingSignal ] }
+                 , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse)))
+                              StackCard.draggingSignal ] }
 
+main: Signal Html.Html
 main =
   app.html
 
