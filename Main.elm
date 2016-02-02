@@ -4,7 +4,6 @@ import Json.Encode exposing (encode)
 import Json.Decode
 import Graphics.Element exposing (..)
 import Task exposing (..)
-import TaskTutorial exposing (print)
 import Effects exposing (Never, Effects)
 import App exposing (..)
 import ElmFire
