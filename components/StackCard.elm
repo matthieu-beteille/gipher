@@ -96,9 +96,8 @@ hasBeenSwiped ( windowWidth, windowHeight ) ( dx, dy ) =
 
 update: Action -> Model -> { b | window : ( Int, Int ) } -> ( ( Model, Int ), Effects Action )
 update action model global =
-  let { startPos, endPos, animationType
-      , elapsedTime, prevClockTime
-      , relativeStartPos, mouse } = model.animationState
+  let { startPos, endPos, animationType, elapsedTime
+      , prevClockTime, relativeStartPos, mouse } = model.animationState
       { animationState } = model
   in
     case action of
@@ -203,8 +202,8 @@ getDelta animationModel mousePos =
 
 -- view
 
-view: Signal.Address Action -> Bool -> Int -> Model -> Html
-view address isFirstOfStack index model =
+view: Signal.Address Action -> Model -> Html
+view address model =
   let { startPos, endPos, animationType, elapsedTime, mouse } = model.animationState
       delta = getDelta model.animationState mouse
       cardAttributes = getCardAttributes model

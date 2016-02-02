@@ -6,8 +6,8 @@ import Html.Events exposing ( onClick, onMouseUp )
 import ElmFire exposing (..)
 import Effects exposing (..)
 import ElmFire exposing ( Snapshot, childAdded, noOrder, noLimit )
-import Json.Encode
 import Stack
+import Gif
 import LikedGifs
 import Login
 
@@ -54,7 +54,7 @@ init requestGifs =
 type Action
   = Stack Stack.Action
   | Login Login.Action
-  | LikedGifs LikedGifs.Action
+  | NewLikedGif Gif.Model
   | Resize ( Int, Int )
   | ToggleMenu
   | GoTo Route
@@ -62,13 +62,13 @@ type Action
 
   -- Update
 
-update: Signal.Address Json.Encode.Value -> Action -> Model -> (Model, Effects Action)
-update address action model =
+update: Action -> Model -> (Model, Effects Action)
+update action model =
   let { global } = model
   in
     case action of
       Login loginAction ->
-        let ( newUser , effects ) = Login.update address loginAction model.global.user model.global.root
+        let ( newUser , effects ) = Login.update loginAction model.global.user model.global.root
             newGlobal = { global | user = newUser }
         in
           if newUser == Nothing then
@@ -95,11 +95,11 @@ update address action model =
             in
               ( { model | global = newGlobal }, Effects.none )
 
-      LikedGifs action ->
-        let ( newLikedGifs, addedId ) = LikedGifs.update action model.likedGifs
-            newGifs = Stack.removeById addedId model.newGifs
+      NewLikedGif gif ->
+        let newLikedGifs = LikedGifs.update (LikedGifs.Data gif) model.likedGifs
+            gifs = Stack.removeById gif.id model.newGifs
         in
-          ( { model | likedGifs = newLikedGifs, newGifs = newGifs }, Effects.none )
+          ( { model | likedGifs = newLikedGifs, newGifs = gifs }, Effects.none )
 
       ToggleMenu ->
         let newMenu = not model.global.isMenuOpened
@@ -122,7 +122,7 @@ view address model =
   let overflowY = model.global.route == MyGifs
       view = case model.global.route of
         Home -> Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
-        MyGifs -> LikedGifs.view (Signal.forwardTo address LikedGifs) model.likedGifs
+        MyGifs -> LikedGifs.view model.likedGifs
       body = case model.global.user of
         Just user ->
           [ navBar address,

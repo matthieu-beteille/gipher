@@ -9,6 +9,7 @@ import Json.Decode exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing ( onClick, onMouseUp )
+import LikedGifs exposing ( firebaseMailbox )
 
 type alias User =
   ( { uid: String
@@ -29,8 +30,8 @@ init:Model
 init =
   Nothing
 
-update: Signal.Address Json.Encode.Value -> Action -> Model -> ElmFire.Location -> ( Model, Effects Action )
-update address action model root =
+update: Action -> Model -> ElmFire.Location -> ( Model, Effects Action )
+update action model root =
   case action of
     Login auth ->
       case auth of
@@ -38,7 +39,7 @@ update address action model root =
           let user = (getUserFromAuth auth)
               userObject = Just user
               effects = ElmFire.subscribe
-                          (Signal.send address << .value)
+                          (Signal.send firebaseMailbox.address << .value)
                           (always (Task.succeed ()))
                           (childAdded noOrder)
                           (ElmFire.sub user.uid root)

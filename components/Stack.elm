@@ -24,6 +24,8 @@ init requestGifs =
 type Action = Fetch
   | NewGifs (Maybe Model)
   | StackCard StackCard.Action
+  | NextGif Bool
+  | Remove Gif.Model
 
 fetchNewGifs: Effects Action
 fetchNewGifs =
@@ -106,9 +108,19 @@ update action model likedGifs global =
               else
                 ( tail, Effects.map StackCard effects )
 
-            Nothing -> ( model, Effects.none )
+            Nothing ->
+              ( model, Effects.none )
 
-        Nothing -> ( model, Effects.none )
+        Nothing ->
+         ( model, Effects.none )
+
+    Remove gif ->
+      let debug =  Debug.log "test" gif
+      in
+        ( model, Effects.none )
+
+    NextGif hasBeenLiked ->
+      ( model, Effects.none )
 
 view: Signal.Address Action -> List StackCard.Model -> a -> Html
 view address model global =
@@ -120,18 +132,21 @@ view address model global =
           case tail of
             Just tail ->
               div []
-                ( StackCard.view (Signal.forwardTo address StackCard) True 0 first ::
+                (StackCard.view (Signal.forwardTo address StackCard) first::
                 (List.reverse (List.indexedMap (\id gif -> Gif.stackView id gif.gif)
                                                (List.take 5 tail))))
             Nothing -> error
 
         Nothing -> error
-
   in
     div [ flexContainerStyle ] [ gifComponent
             , div [ buttonsContainer ]
-              [ i [ class "material-icons hover-btn", crossStyle, onClick address (StackCard StackCard.SwipeLeft) ] [text "clear"]
-              , i [ class "material-icons hover-btn", tickStyle, onClick address (StackCard StackCard.SwipeRight) ] [text "favorite"] ] ]
+              [ i [ class "material-icons hover-btn"
+                  , crossStyle
+                  , onClick address (StackCard StackCard.SwipeLeft) ] [ text "clear" ]
+              , i [ class "material-icons hover-btn"
+                  , tickStyle
+                  , onClick address (StackCard StackCard.SwipeRight) ] [ text "favorite" ] ] ]
 
 crossStyle: Attribute
 crossStyle =

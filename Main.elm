@@ -1,5 +1,3 @@
-import Json.Encode exposing (encode)
-import Json.Decode
 import Task exposing (..)
 import Effects exposing (Never, Effects)
 import App exposing (..)
@@ -7,8 +5,7 @@ import StartApp
 import StackCard exposing ( mailBox )
 import Stack
 import Window
-import LikedGifs
-import Gif
+import LikedGifs exposing ( firebaseSignal )
 import Html
 
 port title: String
@@ -20,11 +17,11 @@ app =
   in
     StartApp.start
       { init = (model, Effects.batch [effects, sendInitial])
-      , update = (update firebaseMailbox.address)
+      , update = update
       , view = view
       , inputs = [ resizes
                  , firstResize
-                 , firebaseSignal
+                 , Signal.map (\gif -> App.NewLikedGif gif) firebaseSignal
                  , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse)))
                               StackCard.draggingSignal ] }
 
@@ -35,22 +32,6 @@ main =
 port tasks: Signal (Task.Task Never ())
 port tasks =
   app.tasks
-
-firebaseMailbox: Signal.Mailbox Json.Encode.Value
-firebaseMailbox =
-  Signal.mailbox Json.Encode.null
-
-firebaseSignal: Signal Action
-firebaseSignal =
-  Signal.map
-    ( \response ->
-        let gif = Json.Decode.decodeValue Gif.decodeGifFromFirebase response
-                  |> Result.toMaybe
-        in
-          case gif of
-            Just value ->  App.LikedGifs (LikedGifs.Data value)
-            Nothing -> App.NoOp )
-    firebaseMailbox.signal
 
 -- signal to get the initial window size
 
