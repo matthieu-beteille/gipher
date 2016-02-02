@@ -5,12 +5,7 @@
     "license": "BSD3",
     "source-directories": [
         ".",
-        "components/App",
-        "components/Stack",
-        "components/StackCard",
-        "components/Login",
-        "components/Gif",
-        "components/LikedGifs"
+        "components/"
     ],
     "exposed-modules": [],
     "dependencies": {
