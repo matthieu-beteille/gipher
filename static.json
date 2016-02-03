@@ -2,5 +2,6 @@
   "root": ".",
   "routes": {
     "/**": "index.html",
+    "/gipher.css": "gipher.css"
   }
 }

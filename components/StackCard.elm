@@ -13,13 +13,17 @@ import Easing exposing (..)
 import Time exposing ( Time, millisecond )
 import Signal.Extra exposing ( keepWhen )
 
-mailBox: Signal.Mailbox Bool
-mailBox =
+draggingMailbox: Signal.Mailbox Bool
+draggingMailbox =
   Signal.mailbox False
 
 draggingSignal: Signal ( Int, Int )
 draggingSignal =
-  keepWhen mailBox.signal ( 0, 0 ) Mouse.position
+  keepWhen draggingMailbox.signal ( 0, 0 ) Mouse.position
+
+nextGifMailbox: Signal.Mailbox Bool
+nextGifMailbox =
+  Signal.mailbox False
 
 type Animation
   = MouseDragging
@@ -94,7 +98,7 @@ hasBeenSwiped ( windowWidth, windowHeight ) ( dx, dy ) =
 
 -- update
 
-update: Action -> Model -> { b | window : ( Int, Int ) } -> ( ( Model, Int ), Effects Action )
+update: Action -> Model -> { b | window : ( Int, Int ) } -> ( Model, Effects Action )
 update action model global =
   let { startPos, endPos, animationType, elapsedTime
       , prevClockTime, relativeStartPos, mouse } = model.animationState
@@ -103,21 +107,21 @@ update action model global =
     case action of
       DragStart (pos, relativePos) ->
         let newAnimationState = { animationState | startPos = pos, relativeStartPos = relativePos}
-            startDrag = Signal.send mailBox.address True
+            startDrag = Signal.send draggingMailbox.address True
                           |> Task.toMaybe
                           |> Task.map (\_ -> NoOp)
                           |> Effects.task
         in
-         ( ( { model | animationState = newAnimationState }, 0 ), startDrag )
+         ( ( { model | animationState = newAnimationState } ), startDrag )
 
       Drag newMouse ->
         let newAnimationState = { animationState | animationType = MouseDragging, mouse = newMouse }
         in
-          ( ({ model | animationState = newAnimationState }, 0 ), Effects.none )
+          ( ({ model | animationState = newAnimationState } ), Effects.none )
 
       DragEnd newEndPos ->
         let next = hasBeenSwiped global.window newEndPos
-            endDrag = Signal.send mailBox.address False
+            endDrag = Signal.send draggingMailbox.address False
                         |> Task.toMaybe
                         |> Task.map (\_ -> NoOp)
                         |> Effects.task
@@ -126,11 +130,11 @@ update action model global =
           if next then
             let newAnimationState = { animationState | animationType = FadeOut, endPos = newEndPos}
             in
-              ( ( { model | animationState = newAnimationState }, 0 ), effects )
+              ( ( { model | animationState = newAnimationState } ), effects )
           else
             let newAnimationState = { animationState | animationType = DragBack, endPos = newEndPos}
             in
-              ( ( { model | animationState = newAnimationState }, 0 ), effects )
+              ( ( { model | animationState = newAnimationState } ), effects )
 
       AnimationTick clockTime ->
         let newElapsedTime = calculateElapsedTime
@@ -141,30 +145,39 @@ update action model global =
           if newElapsedTime > duration then
             let newAnimationState = { animationState | animationType = None, elapsedTime = 0, prevClockTime = 0 }
                 next = hasBeenSwiped global.window endPos
-                action = if next && (fst endPos) < 0 then -1
-                  else if next && (fst endPos) > 0 then 1
-                  else 0
+                endEffects = if next && (fst endPos) < 0 then
+                  Signal.send nextGifMailbox.address False
+                        |> Task.toMaybe
+                        |> Task.map (\_ -> NoOp)
+                        |> Effects.task
+                else if next && (fst endPos) > 0 then
+                  Signal.send nextGifMailbox.address True
+                        |> Task.toMaybe
+                        |> Task.map (\_ -> NoOp)
+                        |> Effects.task
+                else
+                  Effects.none
             in
-              ( ( { model | animationState = newAnimationState }, action ), Effects.none )
+              ( ( { model | animationState = newAnimationState } ), endEffects )
           else
             let newAnimationState = { animationState | elapsedTime = newElapsedTime, prevClockTime = clockTime }
             in
-              ( ( { model | animationState = newAnimationState }, 0 ), Effects.tick AnimationTick )
+              ( ( { model | animationState = newAnimationState } ), Effects.tick AnimationTick )
 
       SwipeRight ->
         ( ( { model | animationState = { animationState | animationType = Swipe,
                                                           startPos = ( 0, 0 ),
                                                           relativeStartPos = ( 0, 0 ),
-                                                          endPos = ( (toFloat (fst global.window)), 0 ) } }, 0 ), Effects.tick AnimationTick )
+                                                          endPos = ( (toFloat (fst global.window)), 0 ) } } ), Effects.tick AnimationTick )
 
       SwipeLeft ->
         ( ( { model | animationState = { animationState | animationType = Swipe,
                                                           startPos = ( 0, 0 ),
                                                           relativeStartPos = ( 0, 0 ),
-                                                          endPos = ( -1 * (toFloat (fst global.window)), 0 ) } }, 0 ), Effects.tick AnimationTick )
+                                                          endPos = ( -1 * (toFloat (fst global.window)), 0 ) } } ), Effects.tick AnimationTick )
 
       NoOp ->
-        ( ( model, 0 ), Effects.none )
+        ( ( model ), Effects.none )
 
 -- easing
 

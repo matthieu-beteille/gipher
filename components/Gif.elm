@@ -29,10 +29,10 @@ decodeGifFromGiphy: Json.Decoder Model
 decodeGifFromGiphy =
   Json.object4
     Model
-    (Json.at ["id"] Json.string)
-    (Json.at ["images", "fixed_height", "url"] Json.string)
-    (Json.at ["images", "fixed_height", "width"] Json.string)
-    (Json.at ["images", "fixed_height", "height"] Json.string)
+    (Json.at [ "id" ] Json.string)
+    (Json.at [ "images", "fixed_height", "url"] Json.string)
+    (Json.at [ "images", "fixed_height", "width"] Json.string)
+    (Json.at [ "images", "fixed_height", "height"] Json.string)
 
 decodeGifFromFirebase: Json.Decoder Model
 decodeGifFromFirebase =
@@ -57,7 +57,8 @@ smallView: Model -> Html
 smallView gif =
   img  [ src (getFixedWidthUrl gif.url)
        , style [ ( "margin", "0.5px" )
-               , ( "border-radius", "2px" ) ] ] []
+               , ( "border-radius", "2px" )
+               , ( "width", "200px" ) ] ] []
 
 -- modalView: Model -> Html
 -- cardView gif =
@@ -70,19 +71,19 @@ getFixedWidthUrl =
 
 getContainerStyle: Attribute
 getContainerStyle =
-  style [ ("box-shadow", "0px 0px 4px 0px #0076E5" )
-        , ("overflow-x", "hidden")
-        , ("padding", "5px")
-        , ("background-color", "white")
-        , ("cursor", "pointer")
-        , ("border-radius", "3px") ]
+  style [ ( "box-shadow", "0px 0px 4px 0px #0076E5"  )
+        , ( "overflow-x", "hidden" )
+        , ( "padding", "5px" )
+        , ( "background-color", "white" )
+        , ( "cursor", "pointer" )
+        , ( "border-radius", "3px" ) ]
 
 getModalStyle: Attribute
 getModalStyle =
-  style [ ("position", "fixed")
-        , ("padding", "10px")
-        , ("background-color", "white")
-        , ("border-radius", "3px") ]
+  style [ ( "position", "fixed" )
+        , ( "padding", "10px" )
+        , ( "background-color", "white" )
+        , ( "border-radius", "3px" ) ]
 
 stackCardStyle: Model -> Int -> Attribute
 stackCardStyle gif index =

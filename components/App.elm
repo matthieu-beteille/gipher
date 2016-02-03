@@ -7,7 +7,6 @@ import ElmFire exposing (..)
 import Effects exposing (..)
 import ElmFire exposing ( Snapshot, childAdded, noOrder, noLimit )
 import Stack
-import Gif
 import LikedGifs
 import Login
 
@@ -54,7 +53,7 @@ init requestGifs =
 type Action
   = Stack Stack.Action
   | Login Login.Action
-  | NewLikedGif Gif.Model
+  | LikedGifs LikedGifs.Action
   | Resize ( Int, Int )
   | ToggleMenu
   | GoTo Route
@@ -95,11 +94,10 @@ update action model =
             in
               ( { model | global = newGlobal }, Effects.none )
 
-      NewLikedGif gif ->
-        let newLikedGifs = LikedGifs.update (LikedGifs.Data gif) model.likedGifs
-            gifs = Stack.removeById gif.id model.newGifs
+      LikedGifs action ->
+        let ( newLikedGifs, effects ) = LikedGifs.update action model.likedGifs
         in
-          ( { model | likedGifs = newLikedGifs, newGifs = gifs }, Effects.none )
+          ( { model | likedGifs = newLikedGifs }, Effects.map Stack effects )
 
       ToggleMenu ->
         let newMenu = not model.global.isMenuOpened

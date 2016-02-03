@@ -2,7 +2,7 @@ import Task exposing (..)
 import Effects exposing (Never, Effects)
 import App exposing (..)
 import StartApp
-import StackCard exposing ( mailBox )
+import StackCard exposing ( nextGifMailbox )
 import Stack
 import Window
 import LikedGifs exposing ( firebaseSignal )
@@ -21,7 +21,8 @@ app =
       , view = view
       , inputs = [ resizes
                  , firstResize
-                 , Signal.map (\gif -> App.NewLikedGif gif) firebaseSignal
+                 , Signal.map (\hasBeenLiked -> App.Stack (Stack.NextCard hasBeenLiked)) nextGifMailbox.signal
+                 , Signal.map (\action -> App.LikedGifs action) firebaseSignal
                  , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse)))
                               StackCard.draggingSignal ] }
 

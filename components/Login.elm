@@ -4,7 +4,6 @@ import ElmFire exposing (childAdded, noOrder)
 import ElmFire.Auth exposing (..)
 import Task
 import Effects exposing (..)
-import Json.Encode
 import Json.Decode exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -42,7 +41,7 @@ update action model root =
                           (Signal.send firebaseMailbox.address << .value)
                           (always (Task.succeed ()))
                           (childAdded noOrder)
-                          (ElmFire.sub user.uid root)
+                          (ElmFire.sub ("likedGifs/" ++ user.uid) root)
                             |> Task.toMaybe
                             |> Task.map Subscribed
                             |> Effects.task
@@ -86,9 +85,11 @@ getUserFromAuth auth =
 
 loginView: Signal.Address Action -> Model -> Html
 loginView address model =
-  div [ containerStyle ] [ h1 [ titleStyle ] [ text "Gipher" ]
-          , div [ btnStyle ] [ a [onClick address (Login Nothing)] [ i [ class "material-icons", iconStyle ] [ text "account_circle" ]
-                                                                    , text "Login with Facebook"] ] ]
+  let icon = i [ class "material-icons", iconStyle ] [ text "account_circle" ]
+  in
+    div [ containerStyle ] [ h1 [ titleStyle ] [ text "Gipher" ]
+                            , div [ btnStyle ] [ a [ onClick address (Login Nothing) ]
+                                                   [ icon, text "Login with Facebook"] ] ]
 
 login: ElmFire.Location -> Effects Action
 login loc =

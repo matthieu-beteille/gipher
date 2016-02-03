@@ -10,7 +10,6 @@ import Html.Events exposing ( onClick, onMouseDown, onMouseUp )
 import StackCard
 import ElmFire
 import Gif
-import LikedGifs
 
 type alias Model = List StackCard.Model
 
@@ -24,8 +23,9 @@ init requestGifs =
 type Action = Fetch
   | NewGifs (Maybe Model)
   | StackCard StackCard.Action
-  | NextGif Bool
+  | NextCard Bool
   | Remove Gif.Model
+  | NoOp
 
 fetchNewGifs: Effects Action
 fetchNewGifs =
@@ -45,20 +45,16 @@ decodeList =
   Json.object1 identity
     ( "data" := Json.list StackCard.decodeModel )
 
-removeLikedGifs: LikedGifs.Model -> Model -> Model
+removeLikedGifs: List ( Gif.Model ) -> Model -> Model
 removeLikedGifs likedGifs gifs =
   let idsList = List.map (\gif -> gif.id) likedGifs
       filteredList = List.filter (\item -> not (List.member item.gif.id idsList)) gifs
   in
     filteredList
 
-removeById: String -> Model -> Model
-removeById id gifs =
-  List.filter (\item -> not (item.gif.id == id)) gifs
-
 update: Action
         -> Model
-        -> LikedGifs.Model
+        -> List ( Gif.Model )
         -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, Int ) }
         -> ( Model, Effects Action )
 update action model likedGifs global =
@@ -69,9 +65,9 @@ update action model likedGifs global =
     NewGifs maybeGifs ->
       case maybeGifs of
         Just gifs ->
-          let filteredList = removeLikedGifs likedGifs gifs
+          let filteredGifs = removeLikedGifs likedGifs gifs
           in
-            ( gifs, Effects.none )
+            ( filteredGifs, Effects.none )
 
         Nothing ->
           ( init False )
@@ -79,48 +75,41 @@ update action model likedGifs global =
     StackCard gifAction ->
       case (List.head model) of
         Just gif ->
-          case (List.tail model) of
-            Just tail ->
-            let ( ( gif, result ), gifEffects ) = StackCard.update gifAction gif global
-                next = case result of
-                  0 ->
-                    False
-                  _ ->
-                    True
-                create = case global.user of
-                  Just user ->
-                    let firebaseLocation = ElmFire.sub user.uid global.root
-                    in
-                      if result == 1 then
-                        ElmFire.set (Gif.encodeGif gif.gif) (ElmFire.push firebaseLocation)
-                          |> Task.toMaybe
-                          |> Task.map (\_ -> StackCard.NoOp)
-                          |> Effects.task
-                      else
-                        Effects.none
+          let ( gif, effects ) = StackCard.update gifAction gif global
+          in
+           ( gif :: List.drop 1 model, Effects.map StackCard effects )
 
-                  Nothing -> Effects.none
-
-                effects = Effects.batch [ create, gifEffects ]
-            in
-              if not next then
-                ( gif :: tail, Effects.map StackCard effects )
-              else
-                ( tail, Effects.map StackCard effects )
-
-            Nothing ->
-              ( model, Effects.none )
-
-        Nothing ->
-         ( model, Effects.none )
+        Nothing -> ( model, Effects.none )
 
     Remove gif ->
-      let debug =  Debug.log "test" gif
+      let newModel = List.filter (\item -> not (item.gif.id == gif.id)) model
       in
-        ( model, Effects.none )
+        ( newModel, Effects.none )
 
-    NextGif hasBeenLiked ->
-      ( model, Effects.none )
+    NextCard hasBeenLiked ->
+      let effects = case (List.head model) of
+        Just gif ->
+          case global.user of
+            Just user ->
+              let firebaseLocation = ElmFire.sub ("likedGifs/" ++ user.uid) global.root
+              in
+                if hasBeenLiked then
+                  ElmFire.set (Gif.encodeGif gif.gif) (ElmFire.push firebaseLocation)
+                    |> Task.toMaybe
+                    |> Task.map (\_ -> NoOp)
+                    |> Effects.task
+                else
+                  Effects.none
+
+            Nothing ->
+              Effects.none
+        Nothing ->
+          Effects.none
+      in
+        ( List.drop 1 model, effects )
+
+    NoOp -> ( model, Effects.none )
+
 
 view: Signal.Address Action -> List StackCard.Model -> a -> Html
 view address model global =
