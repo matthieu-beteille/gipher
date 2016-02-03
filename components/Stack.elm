@@ -146,7 +146,13 @@ crossStyle =
         , ("transform", "translateX(2px)" )
         , ("border", "6px solid #BBBFBE" )
         , ("font-weight", "bold" )
-        , ("border-radius", "50%" ) ]
+        , ("border-radius", "50%" )
+        , ( "-webkit-touch-callout", "none" )
+        , ( "-webkit-user-select", "none" )
+        , ( "-khtml-user-select", "none" )
+        , ( "-moz-user-select", "none" )
+        , ( "-ms-user-select", "none" ) ]
+
 
 tickStyle: Attribute
 tickStyle =
@@ -156,7 +162,12 @@ tickStyle =
         , ("padding", "9px 11px" )
         , ("transform", "translateX(-2px)" )
         , ("border", "6px solid #BBBFBE" )
-        , ("border-radius", "50%" ) ]
+        , ("border-radius", "50%" )
+        , ( "-webkit-touch-callout", "none" )
+        , ( "-webkit-user-select", "none" )
+        , ( "-khtml-user-select", "none" )
+        , ( "-moz-user-select", "none" )
+        , ( "-ms-user-select", "none" ) ]
 
 buttonsContainer: Attribute
 buttonsContainer =

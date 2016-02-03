@@ -25,7 +25,7 @@ type Action
   | Subscribed (Maybe ElmFire.Subscription)
   | NoOp
 
-init:Model
+init: Model
 init =
   Nothing
 

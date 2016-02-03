@@ -55,10 +55,22 @@ stackView index model =
 
 smallView: Model -> Html
 smallView gif =
-  img  [ src (getFixedWidthUrl gif.url)
-       , style [ ( "margin", "0.5px" )
-               , ( "border-radius", "2px" )
-               , ( "width", "200px" ) ] ] []
+  let height = gif.height
+                |> String.toInt
+                |> Result.toMaybe
+                |> Maybe.withDefault 200
+      width = gif.width
+                |> String.toInt
+                |> Result.toMaybe
+                |> Maybe.withDefault 200
+      newWidth = (toFloat width) / 1.5
+      newHeight = (toFloat height) / 1.5
+  in
+    img [ src gif.url
+         , style [ ( "margin", "0.5px" )
+                 , ( "border-radius", "2px" )
+                 , ( "height", (toString newHeight) ++ "px" )
+                 , ( "width", (toString newWidth) ++ "px" ) ] ] []
 
 -- modalView: Model -> Html
 -- cardView gif =
