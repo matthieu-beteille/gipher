@@ -87,7 +87,7 @@ loginView: Signal.Address Action -> Model -> Html
 loginView address model =
   let icon = i [ class "material-icons", iconStyle ] [ text "account_circle" ]
   in
-    div [ containerStyle ] [ h1 [ titleStyle ] [ text "GipherLOL" ]
+    div [ containerStyle ] [ h1 [ titleStyle ] [ text "Gipher" ]
                             , div [ btnStyle, class "login-btn", onClick address (Login Nothing) ]
                                   [ icon, text "Login with Facebook"] ]
 
