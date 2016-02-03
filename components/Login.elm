@@ -87,9 +87,9 @@ loginView: Signal.Address Action -> Model -> Html
 loginView address model =
   let icon = i [ class "material-icons", iconStyle ] [ text "account_circle" ]
   in
-    div [ containerStyle ] [ h1 [ titleStyle ] [ text "Gipher" ]
-                            , div [ btnStyle ] [ a [ onClick address (Login Nothing) ]
-                                                   [ icon, text "Login with Facebook"] ] ]
+    div [ containerStyle ] [ h1 [ titleStyle ] [ text "GipherLOL" ]
+                            , div [ btnStyle, class "login-btn", onClick address (Login Nothing) ]
+                                  [ icon, text "Login with Facebook"] ]
 
 login: ElmFire.Location -> Effects Action
 login loc =
@@ -100,7 +100,7 @@ login loc =
 
 containerStyle: Attribute
 containerStyle =
-  style [ ( "padding-top", "120px" )
+  style [ ( "padding-top", "200px" )
         , ( "text-align", "center" ) ]
 
 iconStyle: Attribute
@@ -120,7 +120,6 @@ titleStyle =
 btnStyle : Attribute
 btnStyle =
   style [ ( "font-size", "20px" )
-        , ( "color", "white" )
         , ( "cursor", "pointer" )
         , ( "display", "inline-block" )
         , ( "width", "200px" )

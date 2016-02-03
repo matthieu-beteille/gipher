@@ -7,6 +7,16 @@ body > div {
   height: 100%;
 }
 
+.login-btn {
+  transition: background-color ease 300ms;
+  color: white;
+}
+
+.login-btn:hover {
+  background-color: white;
+  color: #0076E5;
+}
+
 .hover {
   opacity: 0.8;
 }

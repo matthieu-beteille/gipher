@@ -37,7 +37,7 @@ fetchNewGifs =
 getUrl: String
 getUrl =
   Http.url
-    "http://api.giphy.com/v1/gifs/trending"
+    "https://api.giphy.com/v1/gifs/trending"
     [ ( "api_key", "dc6zaTOxFJmzC" ), ( "limit", "400" ) ]
 
 decodeList: Json.Decoder Model
