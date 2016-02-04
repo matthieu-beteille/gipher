@@ -66,11 +66,13 @@ smallView gif =
       newWidth = (toFloat width) / 1.5
       newHeight = (toFloat height) / 1.5
   in
-    img [ src gif.url
+    a [ href gif.url
+      , target "_blank" ]
+      [ img [ src gif.url
          , style [ ( "margin", "0.5px" )
                  , ( "border-radius", "2px" )
                  , ( "height", (toString newHeight) ++ "px" )
-                 , ( "width", (toString newWidth) ++ "px" ) ] ] []
+                 , ( "width", (toString newWidth) ++ "px" ) ] ] [] ]
 
 -- modalView: Model -> Html
 -- cardView gif =

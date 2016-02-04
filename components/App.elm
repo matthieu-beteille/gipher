@@ -133,7 +133,7 @@ view address model =
 
 navBar: Signal.Address Action -> Html
 navBar address =
-  div [ onClick address ToggleMenu, navbarStyle ] [ div [class "material-icons hover", hamburgerStyle] [text "menu"]
+  div [ navbarStyle ] [ div [ onClick address ToggleMenu, class "material-icons hover", hamburgerStyle ] [ text "menu" ]
                                                   , div [ navbarTitleStyle ] [ text "Gipher" ] ]
 overlayMenu: Signal.Address Action -> Bool -> Html
 overlayMenu address isOpened =
