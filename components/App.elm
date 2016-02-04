@@ -123,7 +123,7 @@ view address model =
         MyGifs -> LikedGifs.view model.likedGifs
       body = case model.global.user of
         Just user ->
-          [ navBar address,
+          [ navBar address model.global.isMenuOpened,
             overlayMenu address model.global.isMenuOpened,
             view ]
         Nothing ->
@@ -131,17 +131,21 @@ view address model =
   in
     div [ containerStyle overflowY ] ( head :: body )
 
-navBar: Signal.Address Action -> Html
-navBar address =
-  div [ navbarStyle ] [ div [ onClick address ToggleMenu, class "material-icons hover", hamburgerStyle ] [ text "menu" ]
-                                                  , div [ navbarTitleStyle ] [ text "Gipher" ] ]
+navBar: Signal.Address Action -> Bool -> Html
+navBar address isMenuOpened =
+  let closeMenuIcon = if isMenuOpened
+    then i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ] [ text "clear" ]
+    else div [] []
+  in
+    div [ navbarStyle ] [ div [ onClick address ToggleMenu, class "material-icons hover", hamburgerStyle ] [ text "menu" ]
+                        , div [ navbarTitleStyle ] [ text "Gipher" ]
+                        , closeMenuIcon ]
+
 overlayMenu: Signal.Address Action -> Bool -> Html
 overlayMenu address isOpened =
     div [ overlayStyle isOpened ] [ div [ class "hover", menuItemStyle, onClick address (GoTo Home) ] [text "Home"]
                                    , div [ class "hover", menuItemStyle, onClick address (GoTo MyGifs)] [text "Liked Gifs"]
-                                   , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ]
-                                   , i [ class "material-icons hover", crossStyle, (onClick address ToggleMenu) ]
-                                       [ text "clear" ] ]
+                                   , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ] ]
 
 head: Html
 head =
@@ -235,7 +239,7 @@ navbarTitleStyle =
 crossStyle: Attribute
 crossStyle =
   style [ ( "position", "absolute" )
-        , ( "top", "20px" )
+        , ( "top", "25px" )
         , ( "right", "30px" )
         , ( "color", "white" )
         , ( "cursor", "pointer" ) ]
