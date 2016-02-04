@@ -33,23 +33,28 @@ update: Action -> Model -> ElmFire.Location -> ( Model, Effects Action )
 update action model root =
   case action of
     Login auth ->
-      case auth of
-        Just auth ->
-          let user = (getUserFromAuth auth)
-              userObject = Just user
-              effects = ElmFire.subscribe
-                          (Signal.send firebaseMailbox.address << .value)
-                          (always (Task.succeed ()))
-                          (childAdded noOrder)
-                          (ElmFire.sub ("likedGifs/" ++ user.uid) root)
-                            |> Task.toMaybe
-                            |> Task.map Subscribed
-                            |> Effects.task
-          in
-            ( userObject, effects )
-
+      case model of
         Nothing ->
-          ( model, login root )
+          case auth of
+            Just auth ->
+              let user = (getUserFromAuth auth)
+                  userObject = Just user
+                  effects = ElmFire.subscribe
+                              (Signal.send firebaseMailbox.address << .value)
+                              (always (Task.succeed ()))
+                              (childAdded noOrder)
+                              (ElmFire.sub ("likedGifs/" ++ user.uid) root)
+                                |> Task.toMaybe
+                                |> Task.map Subscribed
+                                |> Effects.task
+              in
+                ( userObject, effects )
+
+            Nothing ->
+              ( model, login root )
+
+        Just user -> 
+          ( model, Effects.none )
 
     Logout ->
       let effects = case model of

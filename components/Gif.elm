@@ -67,9 +67,11 @@ smallView gif =
       newHeight = (toFloat height) / 1.5
   in
     a [ href gif.url
-      , target "_blank" ]
+      , target "_blank"
+      , imgLinkStyle ]
       [ img [ src gif.url
-         , style [ ( "margin", "0.5px" )
+         , style [ ( "display", "block" )
+                 , ( "margin", "1px" )
                  , ( "border-radius", "2px" )
                  , ( "height", (toString newHeight) ++ "px" )
                  , ( "width", (toString newWidth) ++ "px" ) ] ] [] ]
@@ -82,6 +84,11 @@ smallView gif =
 getFixedWidthUrl: String -> String
 getFixedWidthUrl =
   Regex.replace Regex.All (Regex.regex "[.]gif") (\_ -> "w.gif")
+
+imgLinkStyle: Attribute
+imgLinkStyle =
+  style [ ( "display", "block" )
+        , ( "height", "100%" ) ]
 
 getContainerStyle: Attribute
 getContainerStyle =
