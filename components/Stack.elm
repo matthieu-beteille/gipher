@@ -13,15 +13,11 @@ import Gif
 
 type alias Model = List StackCard.Model
 
-init: Bool -> ( Model, Effects Action )
-init requestGifs =
-  if requestGifs then
-    ( [], fetchNewGifs )
-  else
-    ( [], Effects.none )
+init: ( Model, Effects Action )
+init =
+  ( [], fetchNewGifs )
 
-type Action = Fetch
-  | NewGifs (Maybe Model)
+type Action = NewGifs (Maybe Model)
   | StackCard StackCard.Action
   | NextCard Bool
   | Remove Gif.Model
@@ -59,9 +55,6 @@ update: Action
         -> ( Model, Effects Action )
 update action model likedGifs global =
   case action of
-    Fetch ->
-      init True
-
     NewGifs maybeGifs ->
       case maybeGifs of
         Just gifs ->
@@ -70,7 +63,7 @@ update action model likedGifs global =
             ( filteredGifs, Effects.none )
 
         Nothing ->
-          ( init False )
+          init
 
     StackCard gifAction ->
       case (List.head model) of
@@ -141,10 +134,11 @@ crossStyle: Attribute
 crossStyle =
   style [ ("font-size", "50px" )
         , ("color", "#FF2300" )
+        , ("margin", "5px" )
         , ("cursor", "pointer" )
         , ("padding", "9px 11px" )
         , ("transform", "translateX(2px)" )
-        , ("border", "6px solid #BBBFBE" )
+        , ("border", "6px solid white" )
         , ("font-weight", "bold" )
         , ("border-radius", "50%" )
         , ( "-webkit-touch-callout", "none" )
@@ -158,10 +152,11 @@ tickStyle: Attribute
 tickStyle =
   style [ ("font-size", "50px" )
         , ("color", "#00FF95" )
+        , ("margin", "5px" )
         , ("cursor", "pointer" )
         , ("padding", "9px 11px" )
         , ("transform", "translateX(-2px)" )
-        , ("border", "6px solid #BBBFBE" )
+        , ("border", "6px solid white" )
         , ("border-radius", "50%" )
         , ( "-webkit-touch-callout", "none" )
         , ( "-webkit-user-select", "none" )
@@ -184,18 +179,3 @@ flexContainerStyle =
         , ( "justify-content", "center" )
         , ( "align-items", "center" )
         , ( "padding-top", "130px") ]
-
-btnAttributes: Signal.Address Action -> List ( Attribute )
-btnAttributes address =
-  [ onClick address Fetch
-  , style
-    [ ( "font-size", "20px" )
-    , ( "color", "white" )
-    , ( "cursor", "pointer" )
-    , ( "display", "inline-block" )
-    , ( "width", "100px" )
-    , ( "text-align", "center" )
-    , ( "border", "1px solid white" )
-    , ( "border-radius", "3px" )
-    , ( "padding", "10px" )
-    , ( "margin-top", "20px" ) ] ]

@@ -34,19 +34,22 @@ type alias Model =
 
  -- Init
 
-init: Bool -> (Model, Effects Action)
-init requestGifs =
-  let ( gifModel, gifEffect ) = Stack.init requestGifs
+init: (Model, Effects Action)
+init =
+  let ( userModel, loginEffect ) = Login.init loc
+      ( gifModel, gifEffect ) = Stack.init
+      loc = ElmFire.fromUrl firebaseUrl
+      effects = Effects.batch [ Effects.map Stack gifEffect, Effects.map Login loginEffect ]
   in
-    ( { global = { root = ElmFire.fromUrl firebaseUrl
-                 , user = Login.init
+    ( { global = { root = loc
+                 , user = userModel
                  , window = ( 0, 0 )
                  , isMenuOpened = False
                  , route = Home }
 
      , newGifs = gifModel
 
-     , likedGifs = [] }, (Effects.map Stack gifEffect) )
+     , likedGifs = [] }, effects )
 
   -- Actions
 
@@ -72,11 +75,11 @@ update action model =
         in
           if newUser == Nothing then
             let
-              ( initState, initEffects ) = init (model.global.user == Nothing)
-              initGlobal = initState.global
-              newGlobal = { initGlobal | window = model.global.window }
+              newGlobal = { newGlobal | isMenuOpened = False, isMenuOpened = False, route = Home }
+              ( newGifs, gifEffect ) = Stack.init
+              logoutEffects = Effects.batch [ Effects.map Stack gifEffect, Effects.map Login effects ]
             in
-              ( { initState | global = newGlobal }, Effects.batch [ initEffects, (Effects.map Login effects)] )
+              ( { model | global = newGlobal, newGifs = newGifs, likedGifs = [] }, logoutEffects )
           else
             ( { model | global = newGlobal }, (Effects.map Login effects) )
 
@@ -129,7 +132,19 @@ view address model =
         Nothing ->
           [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
   in
-    div [ containerStyle overflowY ] ( head :: body )
+    div [ containerStyle overflowY ] ( head :: githubLink :: body )
+
+githubLink: Html
+githubLink =
+  a [ href "https://github.com/matthieu-beteille/gipher"
+    , target "_blank"
+    , style [ ( "position", "absolute" )
+            , ( "right", "20px" )
+            , ( "bottom", "10px" ) ] ]
+    [ img [ src "https://cdn0.iconfinder.com/data/icons/octicons/1024/mark-github-128.png"
+          , style [ ( "width", "30px" ) ] ]
+          [ ] ]
+
 
 navBar: Signal.Address Action -> Bool -> Html
 navBar address isMenuOpened =

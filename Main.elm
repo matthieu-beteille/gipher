@@ -7,20 +7,22 @@ import Stack
 import Window
 import LikedGifs exposing ( firebaseSignal )
 import Html
+import Login exposing ( loginSignal )
 
 port title: String
 port title = "Gipher"
 
 app: StartApp.App Model
 app =
-  let (model, effects) = init False
+  let (model, effects) = init
   in
     StartApp.start
-      { init = (model, Effects.batch [effects, sendInitial])
+      { init = ( model, Effects.batch [effects, sendInitial] )
       , update = update
       , view = view
       , inputs = [ resizes
                  , firstResize
+                 , Signal.map (\action -> App.Login action) loginSignal
                  , Signal.map (\hasBeenLiked -> App.Stack (Stack.NextCard hasBeenLiked)) nextGifMailbox.signal
                  , Signal.map (\action -> App.LikedGifs action) firebaseSignal
                  , Signal.map (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse)))
