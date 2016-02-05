@@ -1,33 +1,37 @@
 # Gipher
 
+http://gipher.co
+
 Tinder-like application allowing you to swipe among trending gifs (using giphy API).
 
-It's been a while I wanted to give elm an attempt, here is my first one. Gipher has the main features we can find in any modern single page application:
+It's been a while I wanted to try out elm, I've always been attracted by FRP, and programming with signals.
+
+This attempt gave birth to gipher. Try it out [here](http://gipher.co).
+
+Gipher has the main features we can find in any modern single page application:
 - login with facebook
 - multiple pages
 - live data sync with firebase
-- animations
+- nice animations
 
 It's a good example showing how you can structure an elm application using signals, everything wired up with start-app package.
 
-To achieve that, I only used elm libraries (no javascript at all :heart_eyes:), here is the list.
+This project is 99.9% elm, it contains only 30 lines of css, the rest of the styling is inline in elm (no javascript at all :heart_eyes:).
 
-### elm-libraries used
+### Packages used (elm)
 
-###### If you need more advanced features to manipulate signals, use the great
-   `Apanatshka/elm-signal-extra`
+###### `elm-signal-extra` provides more advanced features to manipulate signals
 
-###### Amazing library to work with easings (useful for all kind of animations)
-   `Dandandan/Easing`
+###### `Dandandan/Easing` is an amazing library to work with easings (useful for all kind of animations)
 
-###### Awesome library enabling you to interact with firebase in the most 'elmish' way
-  `ThomasWeiser/elmfire`
+
+###### `ThomasWeiser/elmfire` enabling you to interact with firebase in the most 'elmish' way
 
 ###### And of course a big thank you to evancz for all his work around elm:
-  `evancz/elm-effects
-  evancz/elm-html
-  evancz/elm-http
-  evancz/start-app`
+  `evancz/elm-effects`
+  `evancz/elm-html`
+  `evancz/elm-http`
+  `evancz/start-app`
 
 ## TODO
 
