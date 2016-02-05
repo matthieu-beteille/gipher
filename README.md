@@ -24,7 +24,7 @@ This project is 99.9% elm, it contains only 30 lines of css, the rest of the sty
 
 ###### `Dandandan/Easing` is an amazing library to work with easings (useful for all kind of animations)
 
-###### `ThomasWeiser/elmfire` enabling you to interact with firebase in the most 'elmish' way
+###### `ThomasWeiser/elmfire` enables you to interact with firebase in the most 'elmish' way
 
 ###### And of course a big thank you to evancz for all his work around elm:
   `evancz/elm-effects`
