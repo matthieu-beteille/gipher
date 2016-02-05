@@ -4,7 +4,7 @@ http://gipher.co
 
 Tinder-like application allowing you to swipe among trending gifs (using giphy API).
 
-It's been a while I wanted to try out elm, I've always been attracted by FRP, and programming with signals.
+It's been a while I wanted to try out elm, I've always been attracted by FRP and programming with signals.
 
 This attempt gave birth to gipher. Try it out [here](http://gipher.co).
 
@@ -20,10 +20,9 @@ This project is 99.9% elm, it contains only 30 lines of css, the rest of the sty
 
 ### Packages used (elm)
 
-###### `elm-signal-extra` provides more advanced features to manipulate signals
+###### `Apanatshka/elm-signal-extra` provides more advanced features to manipulate signals
 
 ###### `Dandandan/Easing` is an amazing library to work with easings (useful for all kind of animations)
-
 
 ###### `ThomasWeiser/elmfire` enabling you to interact with firebase in the most 'elmish' way
 
