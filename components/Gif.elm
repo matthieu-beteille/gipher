@@ -63,8 +63,8 @@ smallView gif =
                 |> String.toInt
                 |> Result.toMaybe
                 |> Maybe.withDefault 200
-      newWidth = (toFloat width) / 1.5
-      newHeight = (toFloat height) / 1.5
+      newWidth = (toFloat width) / 1.2
+      newHeight = (toFloat height) / 1.2
   in
     a [ href gif.url
       , target "_blank"

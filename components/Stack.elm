@@ -177,5 +177,4 @@ flexContainerStyle =
         , ( "flex-direction", "column" )
         , ( "align-content", "center" )
         , ( "justify-content", "center" )
-        , ( "align-items", "center" )
-        , ( "padding-top", "130px") ]
+        , ( "align-items", "center" ) ]

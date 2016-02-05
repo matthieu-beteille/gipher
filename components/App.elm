@@ -194,6 +194,10 @@ containerStyle overflowY =
   in
     style [ ( "overflow-y", overflow )
           , ( "overflow-x", "hidden" )
+          , ( "display", "flex" )
+          , ( "flex-direction", "column" )
+          , ( "justify-content", "center" )
+          , ( "align-items", "center" )
           , ( "font-family", "Source Sans Pro" )
           , ( "background-color", "#0076E5" )
           , ( "height", "100%" ) ]
@@ -231,7 +235,7 @@ hamburgerStyle =
         , ( "color", "white" )
         , ( "cursor", "pointer" )
         , ( "position", "absolute")
-        , ( "left", "30px" ) ]
+        , ( "left", "15px" ) ]
 
 navbarStyle: Attribute
 navbarStyle =
@@ -239,7 +243,7 @@ navbarStyle =
         , ( "display", "flex" )
         , ( "width", "100%" )
         , ( "align-item", "center" )
-        , ( "padding-top", "20px" )
+        , ( "top", "10px" )
         , ( "z-index", "102" )
         , ( "align-items", "center" )
         , ( "justify-content", "center" ) ]
@@ -254,7 +258,7 @@ navbarTitleStyle =
 crossStyle: Attribute
 crossStyle =
   style [ ( "position", "absolute" )
-        , ( "top", "25px" )
-        , ( "right", "30px" )
+        , ( "top", "10px" )
+        , ( "right", "15px" )
         , ( "color", "white" )
         , ( "cursor", "pointer" ) ]

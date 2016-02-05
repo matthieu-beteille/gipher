@@ -136,8 +136,7 @@ loginView address model =
 
 containerStyle: Attribute
 containerStyle =
-  style [ ( "padding-top", "200px" )
-        , ( "text-align", "center" ) ]
+  style [ ( "text-align", "center" ) ]
 
 iconStyle: Attribute
 iconStyle =
@@ -148,7 +147,7 @@ titleStyle: Attribute
 titleStyle =
   style [ ( "color", "white" )
         , ( "text-align", "center" )
-        , ( "margin-top", "65px" )
+        , ( "margin-top", "0px" )
         , ( "margin-bottom", "50px" )
         , ( "font-size", "2.5em" )
         , ( "letter-spacing", "-3px" ) ]
