@@ -247,7 +247,7 @@ update action model global =
         )
 
       NoOp ->
-        ( (model), Effects.none )
+        ( model, Effects.none )
 
 
 
@@ -405,9 +405,14 @@ getContainerAttributes delta address =
 
 getCardAttributes : Model -> ( Float, Float ) -> Signal.Address Action -> List (Attribute)
 getCardAttributes model delta address =
-  [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
-  , style (getCardStyle model delta)
-  ]
+  let mouseDownListener = if model.animationState.animationType /= None then
+      Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address NoOp)
+    else
+      Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
+  in
+    [ mouseDownListener
+    , style (getCardStyle model delta)
+    ]
 
 
 getCardStyle : Model -> ( Float, Float ) -> List ( String, String )
