@@ -26,7 +26,7 @@ This project is 99.9% elm, it contains only 30 lines of css, the rest of the sty
 
 ###### `ThomasWeiser/elmfire` enables you to interact with firebase in the most 'elmish' way
 
-###### And of course a big thank you to (evancz)[https://github.com/evancz] for all his work around elm:
+###### And of course a big thank you to [evancz](https://github.com/evancz) for all his work around elm:
   `evancz/elm-effects`
   `evancz/elm-html`
   `evancz/elm-http`
