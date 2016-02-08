@@ -10,7 +10,7 @@ This attempt gave birth to [Gipher](http://gipher.co).
 
 Gipher has the main features we can find in any modern single page application:
 - facebook authentication
-- multiple routes
+- multiple sections
 - live data sync with firebase
 - animations
 
