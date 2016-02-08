@@ -2,21 +2,21 @@
 
 http://gipher.co
 
-Tinder-like application allowing you to swipe among trending gifs (using giphy API).
+A Tinder-like application allowing you to swipe among trending gifs (using giphy API).
 
-It's been a while I wanted to try out elm, I've always been attracted by FRP and programming with signals.
+For a while I've wanted to try out elm. I've always been attracted to FRP (Functional Reactive Programming), and programming with signals.
 
-This attempt gave birth to gipher. Try it out [here](http://gipher.co).
+This attempt gave birth to [Gipher](http://gipher.co).
 
 Gipher has the main features we can find in any modern single page application:
-- login with facebook
-- multiple pages
+- facebook authentication
+- multiple sections
 - live data sync with firebase
-- nice animations
+- animations
 
-It's a good example showing how you can structure an elm application using signals, everything wired up with start-app package.
+It's a good showcase of how an elm application is structured using signals, wired up with the start-app package.
 
-This project is 99.9% elm, it contains only 30 lines of css, the rest of the styling is inline in elm (no javascript at all :heart_eyes:).
+This project is 99.9% elm, it contains only 30 lines of css, the rest of the styling is inline within elm (no javascript at all :heart_eyes:).
 
 ### Packages used (elm)
 
@@ -26,7 +26,7 @@ This project is 99.9% elm, it contains only 30 lines of css, the rest of the sty
 
 ###### `ThomasWeiser/elmfire` enables you to interact with firebase in the most 'elmish' way
 
-###### And of course a big thank you to evancz for all his work around elm:
+###### And of course a big thank you to [evancz](https://github.com/evancz) for all his work around elm:
   `evancz/elm-effects`
   `evancz/elm-html`
   `evancz/elm-http`
