@@ -369,6 +369,7 @@ hamburgerStyle =
     , ( "cursor", "pointer" )
     , ( "position", "absolute" )
     , ( "left", "15px" )
+    , ( "top", "0px" )
     ]
 
 
@@ -380,6 +381,7 @@ navbarStyle =
     , ( "width", "100%" )
     , ( "align-item", "center" )
     , ( "top", "10px" )
+    , ("left", "0px" )
     , ( "z-index", "102" )
     , ( "align-items", "center" )
     , ( "justify-content", "center" )
