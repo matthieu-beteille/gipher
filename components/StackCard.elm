@@ -21,7 +21,14 @@ draggingMailbox =
 
 draggingSignal : Signal ( Int, Int )
 draggingSignal =
-  keepWhen draggingMailbox.signal ( 0, 0 ) Mouse.position
+  keepWhen draggingMailbox.signal
+          ( 0, 0 )
+          ( Signal.merge touchMailBox.signal Mouse.position )
+
+
+touchMailBox : Signal.Mailbox ( Int, Int )
+touchMailBox =
+  Signal.mailbox ( 0, 0 )
 
 
 nextGifMailbox : Signal.Mailbox Bool
@@ -371,9 +378,9 @@ tagElement liked =
 -- event decoders
 
 
-decoder : Json.Decoder ( Float, Float )
+decoder : Json.Decoder ( Int, Int )
 decoder =
-  Json.object2 (,) ("pageX" := Json.float) ("pageY" := Json.float)
+  Json.object2 (,) ("pageX" := Json.int) ("pageY" := Json.int)
 
 
 doubleTuple : Float -> Float -> Float -> Float -> ( ( Float, Float ), ( Float, Float ) )
@@ -390,29 +397,30 @@ relativeDecoder =
     ("offsetX" := Json.float)
     ("offsetY" := Json.float)
 
-
-
--- decoderTouchMove =
---   Json.object1 identity ("touches" := Json.list decoder)
-
+touchDecoder : Json.Decoder ( Int, Int )
+touchDecoder =
+  Json.object1 (\test -> test) (Json.at [ "touches", "0" ] decoder)
 
 getContainerAttributes : ( Float, Float ) -> Signal.Address Action -> List (Attribute)
 getContainerAttributes delta address =
   [ Html.Events.on "mouseup" decoder (\val -> Signal.message address (DragEnd delta))
+  , Html.Events.on "touchend" Json.value (\val -> Signal.message address (DragEnd delta))
   , style [ ( "padding", "40px" ) ]
   ]
 
-
 getCardAttributes : Model -> ( Float, Float ) -> Signal.Address Action -> List (Attribute)
 getCardAttributes model delta address =
-  let mouseDownListener = if model.animationState.animationType /= None then
-      Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address NoOp)
-    else
-      Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
+  let options =  { stopPropagation = False
+                  , preventDefault = True }
+      listeners = if model.animationState.animationType /= None then
+        [ ]
+      else
+       [ Html.Events.on "mousedown" relativeDecoder (\val -> Signal.message address (DragStart val))
+       , Html.Events.on "touchstart" touchDecoder (\( x, y ) -> Signal.message address (DragStart ( ( toFloat x, toFloat y ), ( 0, 0 ) )))
+       ]
   in
-    [ mouseDownListener
-    , style (getCardStyle model delta)
-    ]
+    List.concat [ listeners, [ Html.Events.onWithOptions "touchmove" options touchDecoder (\val -> Signal.message touchMailBox.address val)
+                              , style (getCardStyle model delta) ] ]
 
 
 getCardStyle : Model -> ( Float, Float ) -> List ( String, String )
