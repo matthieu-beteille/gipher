@@ -299,21 +299,23 @@ containerStyle overflowY =
   let
     overflow =
       if overflowY then
-        "auto"
+        [ ( "overflow-y", "auto")
+        , ( "-webkit-overflow-scrolling", "touch") ]
       else
-        "hidden"
+        [ ( "overflow-y", "hidden") ]
   in
     style
-      [ ( "overflow-y", overflow )
-      , ( "overflow-x", "hidden" )
-      , ( "display", "flex" )
-      , ( "flex-direction", "column" )
-      , ( "justify-content", "center" )
-      , ( "align-items", "center" )
-      , ( "font-family", "Source Sans Pro" )
-      , ( "background-color", "#0076E5" )
-      , ( "height", "100%" )
-      ]
+      (List.concat [ overflow
+      , [ ( "overflow-x", "hidden" )
+        , ( "display", "flex" )
+        , ( "flex-direction", "column" )
+        , ( "justify-content", "center" )
+        , ( "align-items", "center" )
+        , ( "font-family", "Source Sans Pro" )
+        , ( "background-color", "#0076E5" )
+        , ( "height", "100%" )
+        ]
+      ])
 
 
 overlayStyle : Bool -> Attribute
