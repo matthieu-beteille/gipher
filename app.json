@@ -2,7 +2,7 @@
     "name": "Gipher",
     "repository": "https://github.com/matthieu-beteille/gipher",
     "env": {
-        "ELM_COMPILE": "elm make Main.elm"
+        "ELM_COMPILE": "elm make Main.elm --output elm.js"
     },
     "buildpacks": [
         {

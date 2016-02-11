@@ -198,7 +198,9 @@ view address model =
         Nothing ->
           [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
   in
-    div [ containerStyle overflowY ] (head :: githubLink :: body)
+    div
+      [ containerStyle overflowY ]
+      (githubLink :: body)
 
 
 githubLink : Html
@@ -299,23 +301,26 @@ containerStyle overflowY =
   let
     overflow =
       if overflowY then
-        [ ( "overflow-y", "auto")
-        , ( "-webkit-overflow-scrolling", "touch") ]
+        [ ( "overflow-y", "auto" )
+        , ( "-webkit-overflow-scrolling", "touch" )
+        ]
       else
-        [ ( "overflow-y", "hidden") ]
+        [ ( "overflow-y", "hidden" ) ]
   in
     style
-      (List.concat [ overflow
-      , [ ( "overflow-x", "hidden" )
-        , ( "display", "flex" )
-        , ( "flex-direction", "column" )
-        , ( "justify-content", "center" )
-        , ( "align-items", "center" )
-        , ( "font-family", "Source Sans Pro" )
-        , ( "background-color", "#0076E5" )
-        , ( "height", "100%" )
+      (List.concat
+        [ overflow
+        , [ ( "overflow-x", "hidden" )
+          , ( "display", "flex" )
+          , ( "flex-direction", "column" )
+          , ( "justify-content", "center" )
+          , ( "align-items", "center" )
+          , ( "font-family", "Source Sans Pro" )
+          , ( "background-color", "#0076E5" )
+          , ( "height", "100%" )
+          ]
         ]
-      ])
+      )
 
 
 overlayStyle : Bool -> Attribute
@@ -383,7 +388,7 @@ navbarStyle =
     , ( "width", "100%" )
     , ( "align-item", "center" )
     , ( "top", "10px" )
-    , ("left", "0px" )
+    , ( "left", "0px" )
     , ( "z-index", "102" )
     , ( "align-items", "center" )
     , ( "justify-content", "center" )
