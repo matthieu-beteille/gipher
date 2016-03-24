@@ -9,12 +9,11 @@ import ElmFire exposing (Snapshot, childAdded, noOrder, noLimit)
 import Stack
 import LikedGifs
 import Login
-
+import Signup
 
 firebaseUrl : String
 firebaseUrl =
   "https://gipher.firebaseio.com"
-
 
 
 -- App Routes
@@ -23,6 +22,7 @@ firebaseUrl =
 type Route
   = Home
   | MyGifs
+  | SignupRoute
 
 
 
@@ -39,6 +39,7 @@ type alias Model =
       }
   , newGifs : Stack.Model
   , likedGifs : LikedGifs.Model
+  , signup: Signup.Model
   }
 
 
@@ -70,6 +71,7 @@ init =
           }
       , newGifs = gifModel
       , likedGifs = []
+      , signup = Signup.init
       }
     , effects
     )
@@ -82,6 +84,7 @@ init =
 type Action
   = Stack Stack.Action
   | Login Login.Action
+  | Signup Signup.Action
   | LikedGifs LikedGifs.Action
   | Resize ( Int, Int )
   | ToggleMenu
@@ -168,6 +171,10 @@ update action model =
       NoOp ->
         ( model, Effects.none )
 
+      Signup signupAction ->
+        let ( newSignup, effects ) = Signup.update signupAction model.signup model.global.root
+        in
+          ( { model | signup = newSignup }, Effects.map Signup effects  )
 
 
 -- View
@@ -187,6 +194,9 @@ view address model =
         MyGifs ->
           LikedGifs.view model.likedGifs
 
+        SignupRoute ->
+          Signup.view (Signal.forwardTo address Signup)
+
     body =
       case model.global.user of
         Just user ->
@@ -196,7 +206,15 @@ view address model =
           ]
 
         Nothing ->
-          [ Login.loginView (Signal.forwardTo address Login) model.global.user ]
+          let
+            goToSignup = Signal.forwardTo address (always (GoTo SignupRoute))
+          in
+            case model.global.route of
+              SignupRoute ->
+                [ view ]
+
+              _ ->
+              [ Login.loginView (Signal.forwardTo address Login) model.global.user goToSignup ]
   in
     div
       [ containerStyle overflowY ]

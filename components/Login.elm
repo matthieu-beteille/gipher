@@ -16,7 +16,6 @@ loginBox : Signal.Mailbox (Maybe ElmFire.Auth.Authentication)
 loginBox =
   Signal.mailbox Nothing
 
-
 loginSignal : Signal Action
 loginSignal =
   Signal.filterMap
@@ -160,8 +159,8 @@ getUserFromAuth auth =
   User auth.uid auth.token (Result.withDefault "" (decodeValue decodeDisplayName auth.specifics)) Nothing
 
 
-loginView : Signal.Address Action -> Model -> Html
-loginView address model =
+loginView : Signal.Address Action -> Model  -> Signal.Address () -> Html
+loginView address model mainAddress =
   let
     icon =
       i [ class "material-icons", iconStyle ] [ text "account_circle" ]
@@ -172,6 +171,9 @@ loginView address model =
       , div
           [ btnStyle, class "login-btn", onClick address LoginRequest ]
           [ icon, text "Login with Facebook" ]
+      , div
+          [ btnStyle, class "login-btn", onClick mainAddress ()]
+          [ icon, text "Signup" ]
       ]
 
 
