@@ -16,12 +16,13 @@ type alias Model =
   { username : String
   , password : String
   , error : String
+  , success : String
   }
 
 
 init : Model
 init =
-  Model "" "" ""
+  Model "" "" "" ""
 
 
 type Action
@@ -72,7 +73,7 @@ update action model loc =
             |> Task.map (always NoOp)
             |> Effects.task
       in
-        ( model, effect )
+        ( { model | success = "Sign-up successful, signing you in now...." } , effect )
 
     Login ->
       let
@@ -85,7 +86,7 @@ update action model loc =
         ( model, effect )
 
     Error ->
-      ( { model | error = "Signup failed (login must be an email address)" }, Effects.none )
+      ( { model | error = "Signup failed (username should be a valid email address)" }, Effects.none )
 
     NoOp ->
       ( model, Effects.none )
@@ -93,11 +94,10 @@ update action model loc =
     LoginResult result ->
       case result of
         Just result ->
-         ( model, Effects.none )
+          ( model, Effects.none )
 
         Nothing ->
-        ( { model | error = "Username or password incorrect" }, Effects.none )
-
+          ( { model | error = "Username or password incorrect" }, Effects.none )
 
 
 renderForm : Signal.Address Action -> Html
@@ -136,12 +136,15 @@ renderForm address =
 view : Signal.Address Action -> Model -> Html
 view address model =
   let
-    errorMessage =
-      div [ errorStyle ] [ text model.error ]
+    message =
+      if model.success /= "" then
+        div [ successStyle ] [ text model.success ]
+      else
+        div [ errorStyle ] [ text model.error ]
   in
     div
       []
-      [ errorMessage
+      [ message
       , renderForm address
       , div
           [ btnStyle, class "login-btn", onClick address Login ]
@@ -175,7 +178,17 @@ titleStyle =
 errorStyle : Attribute
 errorStyle =
   style
-    [ ( "color", "white" )
+    [ ( "color", "#FF2300" )
+    , ( "text-align", "center" )
+    , ( "margin-top", "10px" )
+    , ( "margin-bottom", "10px" )
+    , ( "font-size", "1em" )
+    ]
+
+successStyle : Attribute
+successStyle =
+  style
+    [ ( "color", "#00FF95" )
     , ( "text-align", "center" )
     , ( "margin-top", "10px" )
     , ( "margin-bottom", "10px" )
