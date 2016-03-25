@@ -63,7 +63,7 @@ removeLikedGifs likedGifs gifs =
     filteredList
 
 
-update : Action -> Model -> List (Gif.Model) -> { c | root : ElmFire.Location, user : Maybe { a | uid : String }, window : ( Int, Int ) } -> ( Model, Effects Action )
+update : Action -> Model -> List (Gif.Model) -> { c | root : ElmFire.Location, login : { b | user : Maybe { a | uid : String } }, window : ( Int, Int ) } -> ( Model, Effects Action )
 update action model likedGifs global =
   case action of
     NewGifs maybeGifs ->
@@ -102,7 +102,7 @@ update action model likedGifs global =
         effects =
           case (List.head model) of
             Just gif ->
-              case global.user of
+              case global.login.user of
                 Just user ->
                   let
                     firebaseLocation =

@@ -32,3 +32,52 @@ body > div {
 .hover-btn:hover {
   background-color: white;
 }
+
+
+/* label color */
+.input-field label {
+  color: #fff;
+}
+/* label focus color */
+.input-field input[type=text]:focus + label {
+  color: #fff;
+}
+/* label underline focus color */
+.input-field input[type=text]:focus {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  box-shadow: 0 1px 0 0 #fff;
+}
+
+.input-field input[type=password]:focus {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  box-shadow: 0 1px 0 0 #fff;
+}
+
+.input-field input[type=password]:disabled {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  box-shadow: 0 1px 0 0 #fff;
+}
+
+/* valid color */
+.input-field input[type=text].valid {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  box-shadow: 0 1px 0 0 #fff;
+}
+/* invalid color */
+.input-field input[type=text].invalid {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  box-shadow: 0 1px 0 0 #fff;
+}
+/* icon prefix focus color */
+.input-field .prefix.active {
+  color: #fff;
+}
+
+.row {
+  margin-bottom: 0px;
+}

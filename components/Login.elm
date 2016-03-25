@@ -10,11 +10,13 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onMouseUp)
 import LikedGifs exposing (firebaseMailbox)
+import Signup
 
 
 loginBox : Signal.Mailbox (Maybe ElmFire.Auth.Authentication)
 loginBox =
   Signal.mailbox Nothing
+
 
 loginSignal : Signal Action
 loginSignal =
@@ -40,7 +42,7 @@ type alias User =
 
 
 type alias Model =
-  Maybe (User)
+  { user : Maybe (User), signup : Signup.Model }
 
 
 type Action
@@ -48,6 +50,7 @@ type Action
   | Login Authentication
   | Logout
   | Subscribed (Maybe ElmFire.Subscription)
+  | Signup Signup.Action
   | NoOp
 
 
@@ -60,7 +63,7 @@ init loc =
         |> Task.map (\_ -> NoOp)
         |> Effects.task
   in
-    ( Nothing, effects )
+    ( { user = Nothing, signup = Signup.init }, effects )
 
 
 login : ElmFire.Location -> Effects Action
@@ -78,7 +81,7 @@ update action model root =
       ( model, login root )
 
     Login auth ->
-      case model of
+      case model.user of
         Nothing ->
           let
             user =
@@ -102,7 +105,7 @@ update action model root =
                 Just sub ->
                   Effects.none
           in
-            ( userObject, effects )
+            ( { model | user = userObject }, effects )
 
         Just user ->
           ( model, Effects.none )
@@ -110,7 +113,7 @@ update action model root =
     Logout ->
       let
         effects =
-          case model of
+          case model.user of
             Just user ->
               case user.subscription of
                 Just sub ->
@@ -135,18 +138,25 @@ update action model root =
             Nothing ->
               Effects.none
       in
-        ( Nothing, effects )
+        ( { model | user = Nothing }, effects )
 
     NoOp ->
       ( model, Effects.none )
 
     Subscribed sub ->
-      case model of
+      case model.user of
         Just user ->
-          ( Just { user | subscription = sub }, Effects.none )
+          ( { model | user = Just { user | subscription = sub } }, Effects.none )
 
         Nothing ->
           ( model, Effects.none )
+
+    Signup signupAction ->
+      let
+        ( newSignup, effects ) =
+          Signup.update signupAction model.signup root
+      in
+        ( { model | signup = newSignup }, Effects.map Signup effects )
 
 
 decodeDisplayName : Decoder String
@@ -159,8 +169,8 @@ getUserFromAuth auth =
   User auth.uid auth.token (Result.withDefault "" (decodeValue decodeDisplayName auth.specifics)) Nothing
 
 
-loginView : Signal.Address Action -> Model  -> Signal.Address () -> Html
-loginView address model mainAddress =
+loginView : Signal.Address Action -> Model -> Html
+loginView address model =
   let
     icon =
       i [ class "material-icons", iconStyle ] [ text "account_circle" ]
@@ -168,12 +178,10 @@ loginView address model mainAddress =
     div
       [ containerStyle ]
       [ h1 [ titleStyle ] [ text "Gipher" ]
+      , Signup.view (Signal.forwardTo address Signup) model.signup
       , div
           [ btnStyle, class "login-btn", onClick address LoginRequest ]
           [ icon, text "Login with Facebook" ]
-      , div
-          [ btnStyle, class "login-btn", onClick mainAddress ()]
-          [ icon, text "Signup" ]
       ]
 
 
@@ -205,13 +213,14 @@ titleStyle =
 btnStyle : Attribute
 btnStyle =
   style
-    [ ( "font-size", "20px" )
+    [ ( "font-size", "18px" )
     , ( "cursor", "pointer" )
     , ( "display", "inline-block" )
-    , ( "width", "200px" )
+    , ( "width", "220px" )
     , ( "text-align", "center" )
     , ( "border", "1px solid white" )
     , ( "border-radius", "3px" )
     , ( "padding", "10px" )
+    , ( "margin-top", "20px" )
     , ( "letter-spacing", "-1px" )
     ]

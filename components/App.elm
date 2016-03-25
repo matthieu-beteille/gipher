@@ -9,7 +9,6 @@ import ElmFire exposing (Snapshot, childAdded, noOrder, noLimit)
 import Stack
 import LikedGifs
 import Login
-import Signup
 
 firebaseUrl : String
 firebaseUrl =
@@ -22,8 +21,6 @@ firebaseUrl =
 type Route
   = Home
   | MyGifs
-  | SignupRoute
-
 
 
 -- Model
@@ -32,14 +29,13 @@ type Route
 type alias Model =
   { global :
       { root : ElmFire.Location
-      , user : Login.Model
+      , login : Login.Model
       , window : ( Int, Int )
       , isMenuOpened : Bool
       , route : Route
       }
   , newGifs : Stack.Model
   , likedGifs : LikedGifs.Model
-  , signup: Signup.Model
   }
 
 
@@ -50,7 +46,7 @@ type alias Model =
 init : ( Model, Effects Action )
 init =
   let
-    ( userModel, loginEffect ) =
+    ( loginModel, loginEffect ) =
       Login.init loc
 
     ( gifModel, gifEffect ) =
@@ -64,14 +60,13 @@ init =
   in
     ( { global =
           { root = loc
-          , user = userModel
+          , login = loginModel
           , window = ( 0, 0 )
           , isMenuOpened = False
           , route = Home
           }
       , newGifs = gifModel
       , likedGifs = []
-      , signup = Signup.init
       }
     , effects
     )
@@ -84,7 +79,6 @@ init =
 type Action
   = Stack Stack.Action
   | Login Login.Action
-  | Signup Signup.Action
   | LikedGifs LikedGifs.Action
   | Resize ( Int, Int )
   | ToggleMenu
@@ -105,13 +99,13 @@ update action model =
     case action of
       Login loginAction ->
         let
-          ( newUser, effects ) =
-            Login.update loginAction model.global.user model.global.root
+          ( newLogin, effects ) =
+            Login.update loginAction model.global.login model.global.root
 
           newGlobal =
-            { global | user = newUser }
+            { global | login = newLogin }
         in
-          if newUser == Nothing then
+          if newLogin.user == Nothing then
             let
               newGlobal =
                 { newGlobal | isMenuOpened = False, isMenuOpened = False, route = Home }
@@ -171,11 +165,6 @@ update action model =
       NoOp ->
         ( model, Effects.none )
 
-      Signup signupAction ->
-        let ( newSignup, effects ) = Signup.update signupAction model.signup model.global.root
-        in
-          ( { model | signup = newSignup }, Effects.map Signup effects  )
-
 
 -- View
 
@@ -194,11 +183,8 @@ view address model =
         MyGifs ->
           LikedGifs.view model.likedGifs
 
-        SignupRoute ->
-          Signup.view (Signal.forwardTo address Signup)
-
     body =
-      case model.global.user of
+      case model.global.login.user of
         Just user ->
           [ navBar address model.global.isMenuOpened
           , overlayMenu address model.global.isMenuOpened
@@ -206,15 +192,7 @@ view address model =
           ]
 
         Nothing ->
-          let
-            goToSignup = Signal.forwardTo address (always (GoTo SignupRoute))
-          in
-            case model.global.route of
-              SignupRoute ->
-                [ view ]
-
-              _ ->
-              [ Login.loginView (Signal.forwardTo address Login) model.global.user goToSignup ]
+          [ Login.loginView (Signal.forwardTo address Login) model.global.login ]
   in
     div
       [ containerStyle overflowY ]
