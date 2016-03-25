@@ -30,6 +30,8 @@ type Action
   | Signup
   | Success (Maybe String)
   | Error
+  | Login
+  | LoginResult (Maybe Authentication)
   | NoOp
 
 
@@ -64,19 +66,38 @@ update action model loc =
 
     Success a ->
       let
-        test =
+        effect =
           authenticate loc [] (withPassword model.username model.password)
             |> Task.toMaybe
             |> Task.map (always NoOp)
             |> Effects.task
       in
-        ( model, test )
+        ( model, effect )
+
+    Login ->
+      let
+        effect =
+          authenticate loc [] (withPassword model.username model.password)
+            |> Task.toMaybe
+            |> Task.map LoginResult
+            |> Effects.task
+      in
+        ( model, effect )
 
     Error ->
       ( { model | error = "Signup failed (login must be an email address)" }, Effects.none )
 
     NoOp ->
       ( model, Effects.none )
+
+    LoginResult result ->
+      case result of
+        Just result ->
+         ( model, Effects.none )
+
+        Nothing ->
+        ( { model | error = "Username or password incorrect" }, Effects.none )
+
 
 
 renderForm : Signal.Address Action -> Html
@@ -112,20 +133,6 @@ renderForm address =
     ]
 
 
-
---   <form class="col s12">
--- <div class="row">
---   <div class="input-field col s6">
---     <input placeholder="Placeholder" id="first_name" type="text" class="validate">
---     <label for="first_name">First Name</label>
---   </div>
---   <div class="input-field col s6">
---     <input id="last_name" type="text" class="validate">
---     <label for="last_name">Last Name</label>
---   </div>
--- </div>
-
-
 view : Signal.Address Action -> Model -> Html
 view address model =
   let
@@ -137,8 +144,11 @@ view address model =
       [ errorMessage
       , renderForm address
       , div
+          [ btnStyle, class "login-btn", onClick address Login ]
+          [ text "Sign-in" ]
+      , div
           [ btnStyle, class "login-btn", onClick address Signup ]
-          [ text "Login | Signup" ]
+          [ text "Sign-up" ]
       ]
 
 
@@ -179,11 +189,13 @@ btnStyle =
     [ ( "font-size", "18px" )
     , ( "cursor", "pointer" )
     , ( "display", "inline-block" )
-    , ( "width", "220px" )
+    , ( "width", "100px" )
     , ( "text-align", "center" )
     , ( "border", "1px solid white" )
     , ( "border-radius", "3px" )
     , ( "padding", "10px" )
     , ( "margin-top", "20px" )
+    , ( "margin-right", "5px" )
+    , ( "margin-left", "5px" )
     , ( "letter-spacing", "-1px" )
     ]
