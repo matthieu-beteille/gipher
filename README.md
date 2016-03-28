@@ -2,6 +2,9 @@
 
 http://gipher.co
 
+[Product Hunt Page.](https://www.producthunt.com/tech/gipher)
+
+
 A Tinder-like application allowing you to swipe among trending gifs (using giphy API).
 
 For a while I've wanted to try out elm. I've always been attracted to FRP (Functional Reactive Programming), and programming with signals.
