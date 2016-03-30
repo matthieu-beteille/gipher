@@ -10,9 +10,11 @@ import Stack
 import LikedGifs
 import Login
 
+
 firebaseUrl : String
 firebaseUrl =
   "https://gipher.firebaseio.com"
+
 
 
 -- App Routes
@@ -21,6 +23,7 @@ firebaseUrl =
 type Route
   = Home
   | MyGifs
+
 
 
 -- Model
@@ -166,6 +169,7 @@ update action model =
         ( model, Effects.none )
 
 
+
 -- View
 
 
@@ -192,7 +196,9 @@ view address model =
           ]
 
         Nothing ->
-          [ Login.loginView (Signal.forwardTo address Login) model.global.login ]
+          [ Login.loginView (Signal.forwardTo address Login) model.global.login
+          , privacyLink
+          ]
   in
     div
       [ containerStyle overflowY ]
@@ -216,6 +222,23 @@ githubLink =
         ]
         []
     ]
+
+
+privacyLink : Html
+privacyLink =
+  a
+    [ href "https://www.iubenda.com/privacy-policy/7822896"
+    , target "_blank"
+    , style
+        [ ( "position", "absolute" )
+        , ( "bottom", "20px" )
+        , ( "font-size", "10px" )
+        , ( "color", "white" )
+        , ( "text-align", "center" )
+        , ( "width", "100%" )
+        ]
+    ]
+    [ text "Privacy Policy" ]
 
 
 navBar : Signal.Address Action -> Bool -> Html
