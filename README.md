@@ -4,6 +4,7 @@ http://gipher.co
 
 [Product Hunt Page.](https://www.producthunt.com/tech/gipher)
 
+![screenshot](https://ph-files.imgix.net/4c382360-6b03-46cd-959b-4682af46336b?auto=format&fit=max&h=570&w=430 "")
 
 A Tinder-like application allowing you to swipe among trending gifs (using giphy API).
 

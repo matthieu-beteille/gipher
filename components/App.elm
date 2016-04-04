@@ -214,6 +214,7 @@ githubLink =
         [ ( "position", "absolute" )
         , ( "right", "20px" )
         , ( "bottom", "10px" )
+        , ( "z-index", "100" )
         ]
     ]
     [ img
@@ -226,19 +227,25 @@ githubLink =
 
 privacyLink : Html
 privacyLink =
-  a
-    [ href "https://www.iubenda.com/privacy-policy/7822896"
-    , target "_blank"
-    , style
+  div
+    [ style
         [ ( "position", "absolute" )
         , ( "bottom", "20px" )
         , ( "font-size", "10px" )
         , ( "color", "white" )
         , ( "text-align", "center" )
         , ( "width", "100%" )
+        , ( "z-index", "1" )
         ]
     ]
-    [ text "Privacy Policy" ]
+    [ a
+        [ style
+            [ ( "color", "white" ) ]
+        , href "https://www.iubenda.com/privacy-policy/7822896"
+        , target "_blank"
+        ]
+        [ text "Privacy Policy" ]
+    ]
 
 
 navBar : Signal.Address Action -> Bool -> Html
