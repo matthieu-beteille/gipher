@@ -5,7 +5,14 @@
     "license": "BSD3",
     "source-directories": [
         ".",
-        "components/"
+        "src/",
+        "src/Login",
+        "src/Signup",
+        "src/Stack",
+        "src/LikedGifs",
+        "src/StackCard",
+        "src/Gif",
+        "src/App"
     ],
     "exposed-modules": [],
     "dependencies": {

@@ -2,20 +2,17 @@ module Main (..) where
 
 import Task exposing (..)
 import Effects exposing (Never, Effects)
-import App exposing (..)
+import App.State exposing (..)
+import App.Types exposing (..)
+import App.View exposing (view)
 import StartApp
-import StackCard exposing (nextGifMailbox)
-import Stack
+import StackCard.Inputs exposing (nextGifMailbox)
+import StackCard.Types
+import Stack.Types
 import Window
-import LikedGifs exposing (firebaseSignal)
+import LikedGifs.Inputs exposing (firebaseSignal)
 import Html
-import Login exposing (loginSignal)
-
-
-port title : String
-port title =
-  "Gipher"
-
+import Login.Inputs exposing (loginSignal)
 
 app : StartApp.App Model
 app =
@@ -30,12 +27,13 @@ app =
       , inputs =
           [ resizes
           , firstResize
-          , Signal.map (\action -> App.Login action) loginSignal
-          , Signal.map (\hasBeenLiked -> App.Stack (Stack.NextCard hasBeenLiked)) nextGifMailbox.signal
-          , Signal.map (\action -> App.LikedGifs action) firebaseSignal
+          , Signal.map (\action -> App.Types.Login action) loginSignal
+          , Signal.map (\hasBeenLiked -> App.Types.Stack (Stack.Types.NextCard hasBeenLiked)) nextGifMailbox.signal
+          , Signal.map (\action -> App.Types.LikedGifs action) firebaseSignal
           , Signal.map
-              (\mouse -> App.Stack (Stack.StackCard (StackCard.Drag mouse)))
-              StackCard.draggingSignal
+              (\mouse -> App.Types.Stack (Stack.Types.StackCard (StackCard.Types.Drag mouse)))
+              StackCard.Inputs.draggingSignal
+          , Signal.map (always App.Types.NoOp) swap
           ]
       }
 
@@ -50,13 +48,16 @@ port tasks =
   app.tasks
 
 
+-- HOT-SWAPPING
+
+port swap : Signal.Signal Bool
 
 -- signal to get the initial window size
 
 
 resizes : Signal Action
 resizes =
-  Signal.map App.Resize Window.dimensions
+  Signal.map App.Types.Resize Window.dimensions
 
 
 appStartMailbox : Signal.Mailbox ()
@@ -74,6 +75,6 @@ sendInitial =
   Signal.send appStartMailbox.address ()
     -- Task a ()
     |>
-      Task.map (always App.NoOp)
+      Task.map (always App.Types.NoOp)
     |>
       Effects.task

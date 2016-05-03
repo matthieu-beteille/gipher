@@ -1,176 +1,13 @@
-module App (..) where
+module App.View (..) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onMouseUp)
-import ElmFire exposing (..)
-import Effects exposing (..)
-import ElmFire exposing (Snapshot, childAdded, noOrder, noLimit)
-import Stack
-import LikedGifs
-import Login
-
-
-firebaseUrl : String
-firebaseUrl =
-  "https://gipher.firebaseio.com"
-
-
-
--- App Routes
-
-
-type Route
-  = Home
-  | MyGifs
-
-
-
--- Model
-
-
-type alias Model =
-  { global :
-      { root : ElmFire.Location
-      , login : Login.Model
-      , window : ( Int, Int )
-      , isMenuOpened : Bool
-      , route : Route
-      }
-  , newGifs : Stack.Model
-  , likedGifs : LikedGifs.Model
-  }
-
-
-
--- Init
-
-
-init : ( Model, Effects Action )
-init =
-  let
-    ( loginModel, loginEffect ) =
-      Login.init loc
-
-    ( gifModel, gifEffect ) =
-      Stack.init
-
-    loc =
-      ElmFire.fromUrl firebaseUrl
-
-    effects =
-      Effects.batch [ Effects.map Stack gifEffect, Effects.map Login loginEffect ]
-  in
-    ( { global =
-          { root = loc
-          , login = loginModel
-          , window = ( 0, 0 )
-          , isMenuOpened = False
-          , route = Home
-          }
-      , newGifs = gifModel
-      , likedGifs = []
-      }
-    , effects
-    )
-
-
-
--- Actions
-
-
-type Action
-  = Stack Stack.Action
-  | Login Login.Action
-  | LikedGifs LikedGifs.Action
-  | Resize ( Int, Int )
-  | ToggleMenu
-  | GoTo Route
-  | NoOp
-
-
-
--- Update
-
-
-update : Action -> Model -> ( Model, Effects Action )
-update action model =
-  let
-    { global } =
-      model
-  in
-    case action of
-      Login loginAction ->
-        let
-          ( newLogin, effects ) =
-            Login.update loginAction model.global.login model.global.root
-
-          newGlobal =
-            { global | login = newLogin }
-        in
-          if newLogin.user == Nothing then
-            let
-              newGlobal =
-                { newGlobal | isMenuOpened = False, isMenuOpened = False, route = Home }
-
-              ( newGifs, gifEffect ) =
-                Stack.init
-
-              logoutEffects =
-                Effects.batch [ Effects.map Stack gifEffect, Effects.map Login effects ]
-            in
-              ( { model | global = newGlobal, newGifs = newGifs, likedGifs = [] }, logoutEffects )
-          else
-            ( { model | global = newGlobal }, (Effects.map Login effects) )
-
-      Stack stackAction ->
-        let
-          ( newModel, effects ) =
-            Stack.update
-              stackAction
-              model.newGifs
-              model.likedGifs
-              model.global
-        in
-          ( { model | newGifs = newModel }, (Effects.map Stack effects) )
-
-      Resize size ->
-        let
-          newGlobal =
-            { global | window = size }
-        in
-          ( { model | global = newGlobal }, Effects.none )
-
-      LikedGifs action ->
-        let
-          ( newLikedGifs, effects ) =
-            LikedGifs.update action model.likedGifs
-        in
-          ( { model | likedGifs = newLikedGifs }, Effects.map Stack effects )
-
-      ToggleMenu ->
-        let
-          newMenu =
-            not model.global.isMenuOpened
-
-          newGlobal =
-            { global | isMenuOpened = newMenu }
-        in
-          ( { model | global = newGlobal }, Effects.none )
-
-      GoTo route ->
-        let
-          newGlobal =
-            { global | route = route, isMenuOpened = False }
-        in
-          ( { model | global = newGlobal }, Effects.none )
-
-      NoOp ->
-        ( model, Effects.none )
-
-
-
--- View
+import App.Types exposing (..)
+import LikedGifs.View
+import Stack.View
+import Login.View
+import Login.Types
 
 
 view : Signal.Address Action -> Model -> Html
@@ -182,10 +19,10 @@ view address model =
     view =
       case model.global.route of
         Home ->
-          Stack.view (Signal.forwardTo address Stack) model.newGifs model.global
+          Stack.View.view (Signal.forwardTo address Stack) model.newGifs model.global
 
         MyGifs ->
-          LikedGifs.view model.likedGifs
+          LikedGifs.View.view model.likedGifs
 
     body =
       case model.global.login.user of
@@ -196,7 +33,7 @@ view address model =
           ]
 
         Nothing ->
-          [ Login.loginView (Signal.forwardTo address Login) model.global.login
+          [ Login.View.view (Signal.forwardTo address Login) model.global.login
           , privacyLink
           ]
   in
@@ -271,7 +108,7 @@ overlayMenu address isOpened =
     [ overlayStyle isOpened ]
     [ div [ class "hover", menuItemStyle, onClick address (GoTo Home) ] [ text "Home" ]
     , div [ class "hover", menuItemStyle, onClick address (GoTo MyGifs) ] [ text "Liked Gifs" ]
-    , div [ class "hover", menuItemStyle, onClick address (Login Login.Logout) ] [ text "Logout" ]
+    , div [ class "hover", menuItemStyle, onClick address (Login Login.Types.Logout) ] [ text "Logout" ]
     ]
 
 
