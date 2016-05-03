@@ -1,0 +1,34 @@
+{
+  "name": "gipher",
+  "version": "1.0.0",
+  "description": "Tinder for gifs",
+  "main": "elm.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --hot --config webpack.dev.config.js --no-info"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matthieu-beteille/gipher.git"
+  },
+  "keywords": [
+    "elm",
+    "gipher",
+    "gif",
+    "tinder"
+  ],
+  "author": "Matthieu Béteille",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matthieu-beteille/gipher/issues"
+  },
+  "homepage": "https://github.com/matthieu-beteille/gipher#readme",
+  "dependencies": {
+    "css-loader": "0.23.1",
+    "elm-hot-loader": "0.2.2",
+    "elm-webpack-loader": "2.0.1",
+    "style-loader": "0.13.1",
+    "webpack": "1.13.0",
+    "webpack-dev-server": "1.14.1"
+  }
+}

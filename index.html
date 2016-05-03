@@ -9,7 +9,6 @@
   <link rel="shortcut icon" href="http://d1ujqdpfgkvqfi.cloudfront.net/favicon-generator/htdocs/favicons/2016-03-25/108e35de4252d3d5a41610d7015185a5.ico" type="image/x-icon">
   <link rel="icon" href="http://d1ujqdpfgkvqfi.cloudfront.net/favicon-generator/htdocs/favicons/2016-03-25/108e35de4252d3d5a41610d7015185a5.ico" type="image/x-icon">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
-  <link rel="stylesheet" href="gipher.css">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui">
   <meta name="description" content="Tinder for gifs. Swipe among trending gifs, have fun!">
    <!-- google plus  -->
@@ -32,20 +31,21 @@
   <meta content="website" property="og:type">
 </head>
 
-<body>
+<body >
+  <div id='main'>
+  </div>
 </body>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.min.js"></script>
 <script src="https://code.jquery.com/jquery-2.2.2.min.js" integrity="sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
-<script type="text/javascript" src="elm.js"></script>
+<script type="text/javascript" src="bundle.js"></script>
 <script type="text/javascript">
   if ('addEventListener' in document) {
     document.addEventListener('DOMContentLoaded', function() {
         FastClick.attach(document.body);
     }, false);
   }
-  var todomvc = Elm.fullscreen(Elm.Main);
 </script>
 
 <script>
