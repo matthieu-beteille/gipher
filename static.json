@@ -1,8 +1,0 @@
-{
-  "root": ".",
-  "routes": {
-    "/**": "index.html",
-    "/gipher.css": "gipher.css",
-    "/elm.js.css": "elm.js"
-  }
-}

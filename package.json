@@ -5,7 +5,10 @@
   "main": "elm.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --hot --config webpack.dev.config.js --no-info"
+    "serve": "webpack-dev-server --hot --config webpack.dev.config.js --no-info",
+    "build": "webpack --config webpack.production.config.js --progress --display-modules",
+    "postinstall": "webpack --config webpack.production.config.js --progress --display-modules",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -24,7 +27,10 @@
   },
   "homepage": "https://github.com/matthieu-beteille/gipher#readme",
   "dependencies": {
+    "compression": "1.6.1",
     "css-loader": "0.23.1",
+    "ejs": "2.4.1",
+    "elm": "0.16.0",
     "elm-hot-loader": "0.2.2",
     "elm-webpack-loader": "2.0.1",
     "style-loader": "0.13.1",

@@ -24,7 +24,7 @@ config.plugins = Array.prototype.concat(
 function replaceScriptTag (newSrc) {
   var originalSrc = /bundle\.js/
   var indexPath = path.resolve(__dirname, 'index.html')
-  var destinationPath = path.resolve(__dirname, 'dist', 'index.html')
+  var destinationPath = path.resolve(__dirname, 'dist', 'index.ejs')
 
   fs.readFile(indexPath, 'utf8', function (readErr, content) {
     if (readErr) {
